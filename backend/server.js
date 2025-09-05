@@ -1,24 +1,29 @@
-require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
 
+dotenv.config();
 
-const connection=require("./db");
-connection();
+const app = express();
+const PORT = process.env.PORT || 5000;
 
-const express=require('express');
-const app=express();
-
-const cors=require('cors');
-
+// Middleware
+app.use(express.json()); // Allows the app to parse JSON from the body
 app.use(cors({
-  origin: 'http://localhost:7777', // Your frontend URL, no one else gets you, only me
+  origin: "http://localhost:5173", // Replace with your frontend URL
   credentials: true,
 }));
 
-app.get('/',(req,res)=>{
-    console.log("At base path.")
-})
+// Route for authentication
+const authRoutes = require('./routes/auth');
+app.use('/api/routes/auth', authRoutes);
 
-const port=process.env.PORT || 5000
-app.listen(port , ()=>{
-    console.log("Backend listening at : http://localhost:"+port)
-})
+// Base route to test DB connection (as in your screenshot)
+app.get('/', async (req, res) => {
+  res.send('Backend is running and connected!');
+});
+
+// Start the server
+app.listen(PORT, () => {
+  console.log(`Backend listening at http://localhost:${PORT}`);
+});

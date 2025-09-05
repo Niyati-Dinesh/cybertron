@@ -116,75 +116,83 @@ app.listen(3000, () => {
 
 **`db.js` for MongoDB connection:**
 
-```js
-const mongoose = require('mongoose');
+  ```js
+  const mongoose = require('mongoose');
 
-const mongoURI = 'const mongoURI = "mongodb://localhost:27017/cybertron";
-'
+  const mongoURI = 'const mongoURI = "mongodb://localhost:27017/cybertron";
+  '
 
-const connectToMongo = async () => {
-  await mongoose.connect(mongoURI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  });
-  console.log("Connected to mongoose! Our fortress stands tall.");
-}
+  const connectToMongo = async () => {
+    await mongoose.connect(mongoURI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log("Connected to mongoose! Our fortress stands tall.");
+  }
 
-module.exports = connectToMongo;
-```
+  module.exports = connectToMongo;
+  ```
 
----
+  ---
 
-### 4. **Run Frontend + Backend Together**
+  ### 4. **Run Frontend + Backend Together**
 
-Install `concurrently`:
+  Install `concurrently`:
 
+  ```bash
+  npm i -D concurrently
+  ```
+
+  Modify your `package.json` scripts:
+
+  ```json
+  "scripts": {
+    "dev": "vite",
+    "server": "nodemon Backend/index.js",
+    "both": "concurrently \"npm run dev\" \"npm run server\"",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  }
+  ```
+
+  Run both servers at once:
+
+  ```bash
+  npm run both
+  ```
+
+  ---
+  ### 5. **Start mongodb using docker**
+
+  ```bash
+  //start mongo:
+  sudo docker start mymongo
+
+  //check if its running:
+  sudo docker logs -f mymongo
+
+  //check shell:
+  sudo docker exec -it mymongo mongo
+
+  //see databases:
+  show dbs
+
+  //switch or create new db:
+  use db-name
+
+  //see database-status:
+  db.stats()
+  ```
+
+
+
+### For sqllite with prisma
 ```bash
-npm i -D concurrently
-```
+cd backend
+pnpm i prisma --save-dev
+pnpm i @prisma/client
+pnpm i sqllite3
 
-Modify your `package.json` scripts:
-
-```json
-"scripts": {
-  "dev": "vite",
-  "server": "nodemon Backend/index.js",
-  "both": "concurrently \"npm run dev\" \"npm run server\"",
-  "build": "vite build",
-  "lint": "eslint .",
-  "preview": "vite preview"
-}
-```
-
-Run both servers at once:
-
-```bash
-npm run both
-```
-
----
-### 5. **Start mongodb using docker**
-
-```bash
-//start mongo:
-sudo docker start mymongo
-
-//check if its running:
-sudo docker logs -f mymongo
-
-//check shell:
-sudo docker exec -it mymongo mongo
-
-//see databases:
-show dbs
-
-//switch or create new db:
-use db-name
-
-//see database-status:
-db.stats()
-```
-
-
-
-
+⚡ Pro tip:
+Every time you change schema.prisma, you need to re-run:

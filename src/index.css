@@ -1,1 +1,28 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Libertinus+Serif:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@100..800&display=swap');
 @import "tailwindcss";
+
+/* Sora font */
+.font-sora {
+  font-family: 'Sora', sans-serif;
+}
+
+/* Libertinus font */
+.font-libertinus {
+  font-family: 'Libertinus Serif', serif;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: white;
+  border-radius: 9999px;
+  animation: twinkle infinite;
+}

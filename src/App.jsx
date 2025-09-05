@@ -1,7 +1,12 @@
-import React from 'react'
+import React from "react";
+import GalaxyBg from "./components/GalaxyBg";
 
 export default function App() {
   return (
-    <h1 className="font-mono text-green-500/50">CyberTron</h1>
-  )
+    <>
+     
+      <GalaxyBg>
+    </GalaxyBg>
+    </>
+  );
 }

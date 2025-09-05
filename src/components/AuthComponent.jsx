@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mail, Lock, User, Eye, EyeOff, LogIn, UserPlus } from "lucide-react";
+import { Mail, Lock, User, Eye, EyeOff, LogIn, UserPlus, AlertCircle } from "lucide-react";
 import axiosInstance from "../api/axiosInstance";
 import toast from "react-hot-toast";
 import { Navigate, useNavigate } from "react-router-dom";
@@ -21,50 +21,66 @@ export default function AuthComponent() {
       ...formData,
       [e.target.name]: e.target.value,
     });
+    // Clear error when user starts typing
+    if (message) setMessage("");
   };
+
   const [message, setMessage] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setMessage("");
-
+    
     if (!isLogin && formData.password !== formData.confirmPassword) {
       setMessage("Passwords do not match!");
       setLoading(false);
       return;
     }
-
+    
     try {
-      const endpoint = isLogin ? "/login" : "/register";
       const payload = {
         email: formData.email,
         password: formData.password,
       };
-
-      const response = await axiosInstance.post(`auth${endpoint}`, payload);
-
-      if (response.status === 200) {
+      
+      const response = isLogin 
+        ? await axiosInstance.post('auth/login', payload)
+        : await axiosInstance.post('auth/register', payload);
+      
+      if (response.status === 200 || response.status === 201) {
         const { newUser, user, token } = response.data;
         const storedUser = newUser || user;
-
+        
         sessionStorage.setItem("token", token);
         sessionStorage.setItem("user", JSON.stringify(storedUser));
-
+        sessionStorage.setItem("userEmail", storedUser.email);
+        
+        // Trigger navbar update
+        window.dispatchEvent(new CustomEvent('authChange'));
+        
         toast.success(
           isLogin ? "Login successful!" : "Registration successful!"
         );
         navigate("/success");
-      } else {
-        toast.error("Authentication failed. Please try again.", {
-          duration: 4000,
-          position: "top-center",
-          icon: "⚠️",
-        });
       }
     } catch (error) {
-      const errorMessage =
-        error.response?.data?.message || "Network error. Please try again.";
+      let errorMessage = "Something went wrong. Please try again.";
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.response?.status === 400) {
+        errorMessage = isLogin 
+          ? "Invalid email or password" 
+          : "Registration failed. Please check your information.";
+      } else if (error.response?.status === 404) {
+        errorMessage = "Email not found. Please check your email or sign up.";
+      } else if (error.response?.status >= 500) {
+        errorMessage = "Server error. Please try again later.";
+      }
+      
       setMessage(errorMessage);
     } finally {
       setLoading(false);
@@ -80,7 +96,10 @@ export default function AuthComponent() {
             {/* Toggle Buttons */}
             <div className="flex mb-8 bg-white/10 rounded-lg p-1">
               <button
-                onClick={() => setIsLogin(true)}
+                onClick={() => {
+                  setIsLogin(true);
+                  setMessage("");
+                }}
                 className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2 ${
                   isLogin
                     ? "bg-white text-black shadow-lg"
@@ -91,7 +110,10 @@ export default function AuthComponent() {
                 Login
               </button>
               <button
-                onClick={() => setIsLogin(false)}
+                onClick={() => {
+                  setIsLogin(false);
+                  setMessage("");
+                }}
                 className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2 ${
                   !isLogin
                     ? "bg-white text-black shadow-lg"
@@ -114,6 +136,27 @@ export default function AuthComponent() {
                   : "Join the CyberTron community today"}
               </p>
             </div>
+
+            {/* Error Message */}
+            {message && (
+              <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-red-400 text-sm font-medium">{message}</p>
+                  {message.includes("Email not found") && (
+                    <button
+                      onClick={() => {
+                        setIsLogin(false);
+                        setMessage("");
+                      }}
+                      className="text-red-300 hover:text-red-200 text-xs underline mt-1"
+                    >
+                      Create an account instead
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Form */}
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -240,7 +283,10 @@ export default function AuthComponent() {
                   ? "Don't have an account? "
                   : "Already have an account? "}
                 <button
-                  onClick={() => setIsLogin(!isLogin)}
+                  onClick={() => {
+                    setIsLogin(!isLogin);
+                    setMessage("");
+                  }}
                   className="text-white hover:underline font-medium"
                 >
                   {isLogin ? "Sign up" : "Sign in"}

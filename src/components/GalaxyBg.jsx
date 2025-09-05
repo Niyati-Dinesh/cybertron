@@ -1,10 +1,51 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import NavBar from "./NavBar";
 import AuthComponent from "./AuthComponent";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom";
 import Dashboard from "./Dashboard";
 import Hero from "./Hero";
+import PageNotFound from "./PageNotFound";
+
 const GalaxyBg = () => {
+  const [authKey, setAuthKey] = useState(0);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const navigate = useNavigate();
+
+  // Check authentication status
+  const checkAuth = () => {
+    const token = sessionStorage.getItem("token");
+    const userEmail = sessionStorage.getItem("userEmail");
+    return !!(token && userEmail);
+  };
+
+  useEffect(() => {
+    // Initial auth check
+    setIsAuthenticated(checkAuth());
+
+    const handleAuthChange = () => {
+      // Update auth state and force navbar re-render
+      const authStatus = checkAuth();
+      setIsAuthenticated(authStatus);
+      setAuthKey(prev => prev + 1);
+    };
+
+    // Listen for auth changes
+    window.addEventListener('authChange', handleAuthChange);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('authChange', handleAuthChange);
+    };
+  }, []);
+
+  // Handle logout navigation
+  useEffect(() => {
+    const currentPath = window.location.pathname;
+    if (!isAuthenticated && currentPath === "/dashboard") {
+      navigate("/");
+    }
+  }, [isAuthenticated, navigate]);
+
   return (
     <div className="relative min-h-screen bg-black overflow-hidden">
       {/* Stars */}
@@ -20,13 +61,27 @@ const GalaxyBg = () => {
           }}
         />
       ))}
-      
       <div className="relative">
-        <NavBar />
+        <NavBar key={authKey} />
         <Routes>
-          <Route path='/' element={<Hero />} />
-          <Route path='/user' element={<AuthComponent />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route 
+            path='/' 
+            element={isAuthenticated ? <Dashboard /> : <Hero />} 
+          />
+          <Route 
+            path='/user' 
+            element={isAuthenticated ? <Dashboard /> : <AuthComponent />} 
+          />
+          <Route 
+            path="/dashboard" 
+            element={isAuthenticated ? <Dashboard /> : <Hero />} 
+          />
+          <Route 
+            path="/success" 
+            element={isAuthenticated ? <Dashboard /> : <Hero />} 
+          />
+          
+          <Route path="*" element={<PageNotFound />} />
         </Routes>
       </div>
     </div>

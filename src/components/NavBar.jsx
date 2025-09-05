@@ -22,10 +22,15 @@ const NavBar = () => {
   const handleLogout = () => {
     sessionStorage.removeItem("token")
     sessionStorage.removeItem("userEmail")
+    sessionStorage.removeItem("user")
     setIsAuthenticated(false)
     setUserEmail("")
     setShowUserMenu(false)
-    window.location.href = "/logout"
+    
+    // Trigger auth change event
+    window.dispatchEvent(new CustomEvent('authChange'))
+    
+    window.location.href = "/"
   }
 
   return (

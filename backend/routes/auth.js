@@ -17,7 +17,7 @@ const registerValidation = [
 ];
 
 // Login route -> http://localhost:5000/api/routes/auth/login
-router.get('/login', loginValidation, (req, res, next) => {
+router.post('/login', loginValidation, (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
@@ -25,7 +25,7 @@ router.get('/login', loginValidation, (req, res, next) => {
   authController.login(req, res, next);
 });
 
-// Register route
+// Register route -> http://localhost:5000/api/routes/auth/register
 router.post('/register', registerValidation, (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {

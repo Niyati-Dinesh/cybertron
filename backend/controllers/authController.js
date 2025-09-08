@@ -1,3 +1,5 @@
+//user authentication controller
+
 const { PrismaClient } = require('../generated/prisma');
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");

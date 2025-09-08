@@ -16,7 +16,10 @@ app.use(cors({
 
 // Route for authentication
 const authRoutes = require('./routes/auth');
+const scanRoutes = require('./routes/scan'); // Add this line
+
 app.use('/api/routes/auth', authRoutes);
+app.use('/api/routes/scan', scanRoutes);
 
 // Base route to test DB connection (as in your screenshot)
 app.get('/', async (req, res) => {

@@ -18,3 +18,10 @@ model Users{
   system_id String 
   join_date DateTime @default(now())
 }
+
+model TrustedProcess {
+  id        Int      @id @default(autoincrement())
+  comm      String
+  args      String?   // <-- make it optional
+  added_at  DateTime @default(now())
+}

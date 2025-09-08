@@ -1,19 +1,19 @@
-//for getting the userid from the token
 const jwt = require('jsonwebtoken');
 
 const protect = (req, res, next) => {
   let token;
 
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+  // Check if the request has the 'authtoken' header
+  if (req.headers.authtoken) {
     try {
-      // Get token from header
-      token = req.headers.authorization.split(' ')[1];
+      // Get the token directly from the 'authtoken' header
+      token = req.headers.authtoken;
 
       // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       // Attach the user ID to the request object
-      req.userId = decoded.userId; // Key is `userId`
+      req.userId = decoded.userId;
 
       next();
     } catch (error) {

@@ -11,7 +11,6 @@ const GalaxyBg = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const navigate = useNavigate();
 
-  // Check authentication status
   const checkAuth = () => {
     const token = sessionStorage.getItem("token");
     const userEmail = sessionStorage.getItem("userEmail");
@@ -19,26 +18,19 @@ const GalaxyBg = () => {
   };
 
   useEffect(() => {
-    // Initial auth check
     setIsAuthenticated(checkAuth());
-
     const handleAuthChange = () => {
-      // Update auth state and force navbar re-render
       const authStatus = checkAuth();
       setIsAuthenticated(authStatus);
       setAuthKey(prev => prev + 1);
     };
 
-    // Listen for auth changes
     window.addEventListener('authChange', handleAuthChange);
-
-    // Cleanup
     return () => {
       window.removeEventListener('authChange', handleAuthChange);
     };
   }, []);
 
-  // Handle logout navigation
   useEffect(() => {
     const currentPath = window.location.pathname;
     if (!isAuthenticated && currentPath === "/dashboard") {
@@ -61,28 +53,29 @@ const GalaxyBg = () => {
           }}
         />
       ))}
-      <div className="relative">
+      <div className="relative z-10">
         <NavBar key={authKey} />
-        <Routes>
-          <Route 
-            path='/' 
-            element={isAuthenticated ? <Dashboard /> : <Hero />} 
-          />
-          <Route 
-            path='/user' 
-            element={isAuthenticated ? <Dashboard /> : <AuthComponent />} 
-          />
-          <Route 
-            path="/dashboard" 
-            element={isAuthenticated ? <Dashboard /> : <Hero />} 
-          />
-          <Route 
-            path="/success" 
-            element={isAuthenticated ? <Dashboard /> : <Hero />} 
-          />
-          
-          <Route path="*" element={<PageNotFound />} />
-        </Routes>
+        <div className="pt-20"> {/* This fixes the navbar overlap */}
+          <Routes>
+            <Route 
+              path='/' 
+              element={isAuthenticated ? <Dashboard /> : <Hero />} 
+            />
+            <Route 
+              path='/user' 
+              element={isAuthenticated ? <Dashboard /> : <AuthComponent />} 
+            />
+            <Route 
+              path="/dashboard" 
+              element={isAuthenticated ? <Dashboard /> : <Hero />} 
+            />
+            <Route 
+              path="/success" 
+              element={isAuthenticated ? <Dashboard/> : <Hero />} 
+            />
+            <Route path="*" element={<PageNotFound />} />
+          </Routes>
+        </div>
       </div>
     </div>
   );

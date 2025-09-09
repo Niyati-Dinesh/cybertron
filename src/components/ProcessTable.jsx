@@ -1,5 +1,23 @@
 "use client"
-import { Search, RefreshCw, Shield, X, Eye, EyeOff, AlertTriangle, Filter, Activity, Monitor, Cpu, HardDrive, Users, Clock, Zap } from "lucide-react"
+import {
+  Search,
+  RefreshCw,
+  Shield,
+  X,
+  Eye,
+  EyeOff,
+  AlertTriangle,
+  Filter,
+  Activity,
+  Monitor,
+  Cpu,
+  HardDrive,
+  Users,
+  Clock,
+  Zap,
+  Server,
+  Gauge,
+} from "lucide-react"
 import { useContext, useEffect, useState } from "react"
 import { ScanContext } from "../context/ScanContext"
 import axios from "axios"
@@ -11,117 +29,148 @@ const ProcessTable = () => {
     backgroundFetchProcesses, 
     loading, 
     backgroundLoading, 
-    error 
-  } = useContext(ScanContext);
-  
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedSeverity, setSelectedSeverity] = useState("All");
-  const [expandedArgs, setExpandedArgs] = useState(new Set());
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
-  const [visibleProcessesCount, setVisibleProcessesCount] = useState(10);
+    error,
+    statistics,
+    getProcessCountBySeverity,
+    getSystemStats
+  } = useContext(ScanContext)
+
+  const [searchTerm, setSearchTerm] = useState("")
+  const [selectedSeverity, setSelectedSeverity] = useState("All")
+  const [expandedArgs, setExpandedArgs] = useState(new Set())
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm)
+  const [visibleProcessesCount, setVisibleProcessesCount] = useState(10)
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
+      setDebouncedSearchTerm(searchTerm)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchTerm])
 
   useEffect(() => {
     // Initial load with loading spinner
-    fetchProcesses();
-    
+    fetchProcesses()
+
     // Background refresh every 5 seconds WITHOUT loading spinner
     const interval = setInterval(() => {
-      backgroundFetchProcesses(); // Silent refresh
-    }, 5000);
-    
-    return () => clearInterval(interval);
-  }, []);
+      backgroundFetchProcesses() // Silent refresh
+    }, 5000)
+
+    return () => clearInterval(interval)
+  }, [])
+
+  useEffect(() => {
+    if (processData.length > 0) {
+      console.log("[v0] Sample process data:", processData[0])
+      console.log("[v0] All fields:", Object.keys(processData[0]))
+    }
+  }, [processData])
+
+  const fixProcessData = (processes) => {
+    return processes.map((process) => {
+      // Check if data is misaligned (username in etime field)
+      if (process.etime && typeof process.etime === "string" && process.etime.match(/^[a-zA-Z]+$/)) {
+        // Data is misaligned - try to fix it
+        return {
+          ...process,
+          user: process.etime, // Move username from etime to user
+          etime: (process.args && process.args.split(" ")[0]) || "00:00", // Try to extract time or use default
+          args:
+            process.args && process.args.includes(" ")
+              ? process.args.substring(process.args.indexOf(" ") + 1)
+              : process.args,
+        }
+      }
+      return process
+    })
+  }
 
   const trustProcess = async (comm, args) => {
-    const token = sessionStorage.getItem("token");
+    const token = sessionStorage.getItem("token")
     try {
       await axios.post(
         "http://localhost:5000/api/routes/scan/trust-process",
         { comm, args },
-        { headers: { authtoken: token } }
-      );
+        { headers: { authtoken: token } },
+      )
       // Silent refresh after trust action
-      backgroundFetchProcesses();
+      backgroundFetchProcesses()
     } catch (err) {
-      alert("Failed to trust process.");
-      console.error("Trust process error:", err.response?.data || err.message);
+      alert("Failed to trust process.")
+      console.error("Trust process error:", err.response?.data || err.message)
     }
-  };
+  }
 
   const killProcess = async (pid) => {
-    const token = sessionStorage.getItem("token");
+    const token = sessionStorage.getItem("token")
     try {
-      await axios.post(
-        "http://localhost:5000/api/routes/scan/kill-process", 
-        { pid }, 
-        { headers: { authtoken: token } }
-      );
+      await axios.post("http://localhost:5000/api/routes/scan/kill-process", { pid }, { headers: { authtoken: token } })
       // Silent refresh after kill action
-      backgroundFetchProcesses();
+      backgroundFetchProcesses()
     } catch (err) {
-      alert(`Failed to kill process ${pid}.`);
-      console.error("Kill process error:", err.response?.data || err.message);
+      alert(`Failed to kill process ${pid}.`)
+      console.error("Kill process error:", err.response?.data || err.message)
     }
-  };
+  }
 
   const getBadgeColor = (severity) => {
     switch (severity) {
       case "High":
-        return "bg-red-500/10 text-red-400 border-red-500/20";
+        return "bg-red-500/10 text-red-400 border-red-500/20"
       case "Medium":
-        return "bg-yellow-500/10 text-yellow-400 border-yellow-500/20";
+        return "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
       case "Trusted":
-        return "bg-cyan-500/10 text-cyan-400 border-cyan-500/20";
+        return "bg-cyan-500/10 text-cyan-400 border-cyan-500/20"
       default:
-        return "bg-green-500/10 text-green-400 border-green-500/20";
+        return "bg-green-500/10 text-green-400 border-green-500/20"
     }
-  };
+  }
 
   const getSeverityIcon = (severity) => {
     switch (severity) {
       case "High":
-        return <AlertTriangle className="w-4 h-4" />;
+        return <AlertTriangle className="w-4 h-4" />
       case "Medium":
-        return <AlertTriangle className="w-4 h-4" />;
+        return <AlertTriangle className="w-4 h-4" />
       case "Trusted":
-        return <Shield className="w-4 h-4" />;
+        return <Shield className="w-4 h-4" />
       default:
-        return <Shield className="w-4 h-4" />;
+        return <Shield className="w-4 h-4" />
     }
-  };
+  }
 
-  const filteredProcesses = processData.filter(
+  const rawFilteredProcesses = processData.filter(
     (process) =>
       (selectedSeverity === "All" || process.severity === selectedSeverity) &&
       (process.comm.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-       process.user.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-       process.pid.toString().includes(debouncedSearchTerm))
-  );
+        (process.user && process.user.toLowerCase().includes(debouncedSearchTerm.toLowerCase())) ||
+        process.pid.toString().includes(debouncedSearchTerm)),
+  )
+
+  const filteredProcesses = fixProcessData(rawFilteredProcesses)
 
   const toggleArgsExpansion = (index) => {
-    const newExpanded = new Set(expandedArgs);
+    const newExpanded = new Set(expandedArgs)
     if (newExpanded.has(index)) {
-      newExpanded.delete(index);
+      newExpanded.delete(index)
     } else {
-      newExpanded.add(index);
+      newExpanded.add(index)
     }
-    setExpandedArgs(newExpanded);
-  };
+    setExpandedArgs(newExpanded)
+  }
 
   const clearFilters = () => {
-    setSearchTerm("");
-    setDebouncedSearchTerm("");
-    setSelectedSeverity("All");
-  };
+    setSearchTerm("")
+    setDebouncedSearchTerm("")
+    setSelectedSeverity("All")
+  }
 
-  const hasMoreProcesses = filteredProcesses.length > visibleProcessesCount;
+  const hasMoreProcesses = filteredProcesses.length > visibleProcessesCount
+
+  // Get enhanced stats and process counts
+  const systemStats = getSystemStats()
+  const processCount = getProcessCountBySeverity()
 
   return (
     <div className=" backdrop-blur-md border border-gray-700/30 rounded-2xl p-6 shadow-2xl">
@@ -133,7 +182,10 @@ const ProcessTable = () => {
           </div>
           <div>
             <div className="flex items-center space-x-3">
-              <h2 className="text-2xl font-bold text-white tracking-tight" style={{ fontFamily: 'Libertinus Sans, serif' }}>
+              <h2
+                className="text-2xl font-bold text-white tracking-tight"
+                style={{ fontFamily: "Libertinus Sans, serif" }}
+              >
                 System Processes
               </h2>
               {/* Background loading indicator - small and subtle */}
@@ -144,7 +196,7 @@ const ProcessTable = () => {
                 </div>
               )}
             </div>
-            <p className="text-gray-400 text-sm" style={{ fontFamily: 'Open Sans, sans-serif' }}>
+            <p className="text-gray-400 text-sm" style={{ fontFamily: "Open Sans, sans-serif" }}>
               Real-time monitoring • Auto-refresh every 5s
             </p>
           </div>
@@ -161,13 +213,39 @@ const ProcessTable = () => {
         </button>
       </div>
 
-      {/* Stats Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      {/* Enhanced Stats Row with server data */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
         {[
-          { label: 'Total', value: processData.length, icon: Monitor, color: 'cyan' },
-          { label: 'High Risk', value: processData.filter(p => p.severity === 'High').length, icon: AlertTriangle, color: 'red' },
-          { label: 'Trusted', value: processData.filter(p => p.severity === 'Trusted').length, icon: Shield, color: 'blue' },
-          { label: 'Safe', value: processData.filter(p => p.severity === 'Low').length, icon: Shield, color: 'green' }
+          { 
+            label: "Total", 
+            value: processCount?.total || processData.length, 
+            icon: Monitor, 
+            color: "cyan" 
+          },
+          {
+            label: "High Risk",
+            value: processCount?.high || processData.filter((p) => p.severity === "High").length,
+            icon: AlertTriangle,
+            color: "red",
+          },
+          {
+            label: "Medium Risk",
+            value: processCount?.medium || processData.filter((p) => p.severity === "Medium").length,
+            icon: AlertTriangle,
+            color: "yellow",
+          },
+          {
+            label: "Trusted",
+            value: processCount?.trusted || processData.filter((p) => p.severity === "Trusted").length,
+            icon: Shield,
+            color: "blue",
+          },
+          {
+            label: "Safe",
+            value: processCount?.low || processData.filter((p) => p.severity === "Low").length,
+            icon: Shield,
+            color: "green",
+          },
         ].map((stat, idx) => (
           <div key={idx} className="bg-black/30 border border-gray-700/20 rounded-xl p-4 backdrop-blur-sm">
             <div className="flex items-center justify-between">
@@ -181,6 +259,48 @@ const ProcessTable = () => {
         ))}
       </div>
 
+      {/* Additional System Stats Row (if statistics available) */}
+      {statistics && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="bg-black/20 border border-gray-700/20 rounded-xl p-4 backdrop-blur-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-xs uppercase tracking-wide">Total CPU</p>
+                <p className="text-xl font-bold text-white">{statistics.totalCpuUsage}%</p>
+              </div>
+              <Cpu className="w-5 h-5 text-orange-400" />
+            </div>
+          </div>
+          <div className="bg-black/20 border border-gray-700/20 rounded-xl p-4 backdrop-blur-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-xs uppercase tracking-wide">Total Memory</p>
+                <p className="text-xl font-bold text-white">{statistics.totalMemoryUsage}%</p>
+              </div>
+              <HardDrive className="w-5 h-5 text-purple-400" />
+            </div>
+          </div>
+          <div className="bg-black/20 border border-gray-700/20 rounded-xl p-4 backdrop-blur-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-xs uppercase tracking-wide">High CPU</p>
+                <p className="text-xl font-bold text-white">{statistics.highCpuProcesses}</p>
+              </div>
+              <Gauge className="w-5 h-5 text-red-400" />
+            </div>
+          </div>
+          <div className="bg-black/20 border border-gray-700/20 rounded-xl p-4 backdrop-blur-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-400 text-xs uppercase tracking-wide">Root Processes</p>
+                <p className="text-xl font-bold text-white">{statistics.rootProcesses}</p>
+              </div>
+              <Server className="w-5 h-5 text-amber-400" />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Filters and Search */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="relative">
@@ -191,30 +311,40 @@ const ProcessTable = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-12 pr-4 py-3 bg-black/30 border border-gray-700/30 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400/50 focus:bg-black/40 transition-all duration-300 backdrop-blur-sm"
-            style={{ fontFamily: 'Open Sans, sans-serif' }}
+            style={{ fontFamily: "Open Sans, sans-serif" }}
           />
         </div>
-        
+
         <div className="relative">
           <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <select
             value={selectedSeverity}
             onChange={(e) => setSelectedSeverity(e.target.value)}
             className="w-full pl-12 pr-8 py-3 bg-black/30 border border-gray-700/30 rounded-xl text-white appearance-none focus:outline-none focus:border-cyan-400/50 focus:bg-black/40 transition-all duration-300 backdrop-blur-sm cursor-pointer"
-            style={{ fontFamily: 'Open Sans, sans-serif' }}
+            style={{ fontFamily: "Open Sans, sans-serif" }}
           >
-            <option value="All" className="bg-gray-800">All Severities</option>
-            <option value="High" className="bg-gray-800">High Risk</option>
-            <option value="Medium" className="bg-gray-800">Medium Risk</option>
-            <option value="Low" className="bg-gray-800">Low Risk</option>
-            <option value="Trusted" className="bg-gray-800">Trusted</option>
+            <option value="All" className="bg-gray-800">
+              All Severities
+            </option>
+            <option value="High" className="bg-gray-800">
+              High Risk
+            </option>
+            <option value="Medium" className="bg-gray-800">
+              Medium Risk
+            </option>
+            <option value="Low" className="bg-gray-800">
+              Low Risk
+            </option>
+            <option value="Trusted" className="bg-gray-800">
+              Trusted
+            </option>
           </select>
         </div>
-        
+
         <button
           onClick={clearFilters}
           className="flex items-center justify-center gap-2 px-6 py-3 bg-black/30 border border-gray-700/30 text-gray-400 rounded-xl hover:bg-black/40 hover:border-gray-600/30 transition-all duration-300 backdrop-blur-sm"
-          style={{ fontFamily: 'Open Sans, sans-serif' }}
+          style={{ fontFamily: "Open Sans, sans-serif" }}
         >
           <X className="w-4 h-4" />
           Clear Filters
@@ -316,9 +446,9 @@ const ProcessTable = () => {
                   <td className="px-6 py-4">
                     <div className="flex items-center space-x-2">
                       <div className="w-12 bg-gray-700/30 rounded-full h-2">
-                        <div 
+                        <div
                           className="bg-cyan-400 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${Math.min(parseFloat(p.cpu) || 0, 100)}%` }}
+                          style={{ width: `${Math.min(Number.parseFloat(p.cpu) || 0, 100)}%` }}
                         />
                       </div>
                       <span className="text-gray-300 text-sm font-mono">{p.cpu}%</span>
@@ -327,18 +457,28 @@ const ProcessTable = () => {
                   <td className="px-6 py-4">
                     <div className="flex items-center space-x-2">
                       <div className="w-12 bg-gray-700/30 rounded-full h-2">
-                        <div 
+                        <div
                           className="bg-blue-400 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${Math.min(parseFloat(p.mem) || 0, 100)}%` }}
+                          style={{ width: `${Math.min(Number.parseFloat(p.mem) || 0, 100)}%` }}
                         />
                       </div>
                       <span className="text-gray-300 text-sm font-mono">{p.mem}%</span>
+                      {/* Show enhanced memory details if available */}
+                      {p.memoryDetails && p.memoryDetails.virtualSize > 0 && (
+                        <div className="text-xs text-gray-500 ml-2">
+                          ({p.memoryDetails.residentSize}MB)
+                        </div>
+                      )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-300">{p.user}</td>
-                  <td className="px-6 py-4 text-sm text-gray-300 font-mono">{p.etime}</td>
+                  <td className="px-6 py-4 text-sm text-gray-300">{p.user || "unknown"}</td>
+                  <td className="px-6 py-4 text-sm text-gray-300 font-mono">
+                    {p.etime && !p.etime.match(/^[a-zA-Z]+$/) ? p.etime : "00:00"}
+                  </td>
                   <td className="px-6 py-4">
-                    <div className={`inline-flex items-center space-x-2 px-3 py-1 text-xs font-medium rounded-full border ${getBadgeColor(p.severity)}`}>
+                    <div
+                      className={`inline-flex items-center space-x-2 px-3 py-1 text-xs font-medium rounded-full border ${getBadgeColor(p.severity)}`}
+                    >
                       {getSeverityIcon(p.severity)}
                       <span>{p.severity}</span>
                     </div>
@@ -346,12 +486,11 @@ const ProcessTable = () => {
                   <td className="px-6 py-4 text-sm text-gray-400 max-w-xs">
                     <div className="flex items-center space-x-2">
                       <span className={`font-mono ${expandedArgs.has(index) ? "" : "truncate"}`}>
-                        {expandedArgs.has(index) 
-                          ? p.args 
-                          : p.args && p.args.length > 50 
-                            ? `${p.args.substring(0, 50)}...` 
-                            : p.args || 'N/A'
-                        }
+                        {expandedArgs.has(index)
+                          ? p.args
+                          : p.args && p.args.length > 50
+                            ? `${p.args.substring(0, 50)}...`
+                            : p.args || "N/A"}
                       </span>
                       {p.args && p.args.length > 50 && (
                         <button
@@ -400,16 +539,16 @@ const ProcessTable = () => {
       {hasMoreProcesses && (
         <div className="text-center mt-6">
           <button
-            onClick={() => setVisibleProcessesCount(prev => prev + 10)}
+            onClick={() => setVisibleProcessesCount((prev) => prev + 10)}
             className="px-6 py-3 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-400/30 rounded-xl text-cyan-400 hover:from-cyan-500/30 hover:to-blue-500/30 transition-all duration-300 backdrop-blur-sm"
-            style={{ fontFamily: 'Open Sans, sans-serif' }}
+            style={{ fontFamily: "Open Sans, sans-serif" }}
           >
-            Load More Processes
+            Load More Processes ({filteredProcesses.length - visibleProcessesCount} remaining)
           </button>
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default ProcessTable;
+export default ProcessTable

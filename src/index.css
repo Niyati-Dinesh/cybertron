@@ -1,7 +1,52 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Libertinus+Serif:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Sora:wght@100..800&display=swap');
 @import "tailwindcss";
+
+/* Reset and base styles */
+html, body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* Full-screen galaxy background that expands with content */
+body {
+  position: relative;
+  background: radial-gradient(ellipse at center, #0a0e2a 0%, #000000 70%);
+  font-family: 'Sora', sans-serif;
+  color: white;
+  /* Remove min-height constraint to allow natural expansion */
+}
+
+/* Individual stars */
+.star {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: white;
+  border-radius: 50%;
+  animation: twinkle 3s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+/* Content area - must be above stars */
+.content-area {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
 
 /* Sora font */
 .font-sora {
@@ -13,16 +58,38 @@
   font-family: 'Libertinus Serif', serif;
 }
 
-@keyframes twinkle {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.3; }
+/* Glass effect for cards */
+.glass-card {
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
 }
 
-.star {
-  position: absolute;
-  width: 2px;
-  height: 2px;
-  background: white;
-  border-radius: 9999px;
-  animation: twinkle infinite;
+/* Ensure all main containers are transparent */
+.bg-transparent {
+  background: transparent !important;
+}
+
+/* Fix for any element that might have default backgrounds */
+.min-h-screen {
+  background: transparent !important;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
 }

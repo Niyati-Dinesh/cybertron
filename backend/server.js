@@ -16,8 +16,9 @@ app.use(cors({
 
 // Route for authentication
 const authRoutes = require('./routes/auth');
-const scanRoutes = require('./routes/scan'); // Add this line
-
+const scanRoutes = require('./routes/scan');
+const portScanRoutes = require('./routes/portScan');
+app.use('/api/routes/ports', portScanRoutes);
 app.use('/api/routes/auth', authRoutes);
 app.use('/api/routes/scan', scanRoutes);
 

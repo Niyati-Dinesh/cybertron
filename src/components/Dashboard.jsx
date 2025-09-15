@@ -15,10 +15,11 @@ import {
   HardDrive,
   BarChart,
   Cpu,
-  Lock
+  Lock,
 } from "lucide-react"
 import { ScanContext } from "../context/ScanContext"
 import ProcessTable from "./ProcessTable"
+import PortScannerPanel from "./PortScannerPanel"
 
 const Dashboard = () => {
   const { processData, systemInfo, fetchProcesses, loading, backgroundLoading, scanTimestamp, getSystemStats } =
@@ -26,8 +27,10 @@ const Dashboard = () => {
 
   const [currentTime, setCurrentTime] = useState(new Date())
   const [hasInitialScan, setHasInitialScan] = useState(
-    sessionStorage.getItem("hasInitialScan") === "true" // persist across refresh
+    sessionStorage.getItem("hasInitialScan") === "true", // persist across refresh
   )
+  const [shouldStartPortScanning, setShouldStartPortScanning] = useState(false)
+  const [isRefreshingAllModules, setIsRefreshingAllModules] = useState(false)
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -43,8 +46,22 @@ const Dashboard = () => {
     }
   }, [processData, hasInitialScan])
 
-  const handleInitialScan = () => {
-    fetchProcesses(true)
+  const handleInitialScan = async () => {
+    // Start all modules scanning
+    await fetchProcesses(true)
+    setShouldStartPortScanning(true)
+  }
+
+  const handleRefreshAllModules = async () => {
+    setIsRefreshingAllModules(true)
+    try {
+      // Refresh processes manually (this will show loading state)
+      await fetchProcesses(true)
+      // Trigger port scanner refresh
+      setShouldStartPortScanning((prev) => !prev) // Toggle to trigger refresh
+    } finally {
+      setIsRefreshingAllModules(false)
+    }
   }
 
   const systemStats = getSystemStats()
@@ -91,10 +108,10 @@ const Dashboard = () => {
   // --- START MONITORING PAGE (before first scan) ---
   if (!hasInitialScan) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center">
+      <div className="min-h-screen pt-20 pb-8 px-6 bg-transparent" style={{ fontFamily: "Open Sans, sans-serif" }}>
         <h1 className="text-4xl font-bold text-white mb-6">Welcome to Security Dashboard</h1>
         <p className="text-gray-400 text-lg max-w-2xl mb-10">
-          Your system’s first line of defense. Start monitoring now to analyze running processes, detect potential
+          Your system's first line of defense. Start monitoring now to analyze running processes, detect potential
           threats, and keep your machine safe in real time.
         </p>
 
@@ -128,12 +145,12 @@ const Dashboard = () => {
           {loading || backgroundLoading ? (
             <div className="flex items-center space-x-4">
               <RefreshCw className="w-8 h-8 animate-spin" />
-              <span>Scanning...</span>
+              <span>Initializing Security Modules...</span>
             </div>
           ) : (
             <div className="flex items-center space-x-4">
               <Zap className="w-8 h-8" />
-              <span>Start Monitoring</span>
+              <span>Scan Now</span>
             </div>
           )}
         </button>
@@ -143,7 +160,7 @@ const Dashboard = () => {
 
   // --- AFTER INITIAL SCAN (normal dashboard) ---
   return (
-    <div className="min-h-screen pt-20 pb-8 px-6" style={{ fontFamily: "Open Sans, sans-serif" }}>
+    <div className="min-h-screen pt-20 pb-8 px-6 bg-transparent" style={{ fontFamily: "Open Sans, sans-serif" }}>
       <div className="max-w-6xl mx-auto">
         <div className="mb-16">
           {/* Main heading section */}
@@ -201,26 +218,26 @@ const Dashboard = () => {
 
             {/* Right side - Floating Scan Button */}
             <div className="flex-shrink-0">
-              {backgroundLoading && (
+              {(loading || isRefreshingAllModules) && (
                 <div className="flex items-center justify-center mb-4">
                   <div className="flex items-center space-x-2 px-4 py-2 bg-cyan-400/10 border border-cyan-400/20 rounded-lg">
                     <RefreshCw className="w-4 h-4 animate-spin text-cyan-400" />
-                    <span className="text-cyan-400 text-sm font-medium">Live Update</span>
+                    <span className="text-cyan-400 text-sm font-medium">Refreshing All Modules</span>
                   </div>
                 </div>
               )}
 
               <div className="relative">
                 <button
-                  onClick={handleInitialScan}
-                  disabled={loading || backgroundLoading}
+                  onClick={handleRefreshAllModules}
+                  disabled={loading || isRefreshingAllModules}
                   className={`cursor-pointer relative px-16 py-8 rounded-3xl font-bold text-2xl transition-all duration-500 transform border-2 ${
-                    loading || backgroundLoading
+                    loading || isRefreshingAllModules
                       ? "bg-gray-600/20 text-gray-400 cursor-not-allowed border-gray-500/20"
                       : "bg-transparent text-white border-white/30 hover:border-white hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:scale-105"
                   }`}
                 >
-                  {loading || backgroundLoading ? (
+                  {loading || isRefreshingAllModules ? (
                     <div className="flex items-center space-x-4">
                       <RefreshCw className="w-8 h-8 animate-spin" />
                       <span>Scanning...</span>
@@ -253,7 +270,24 @@ const Dashboard = () => {
                 <Activity className="w-8 h-8 text-cyan-400" />
               </div>
               <h3 className="text-white font-semibold text-lg mb-2">Process Monitor</h3>
-              <p className="text-gray-400 text-sm mb-4 leading-relaxed">Real-time process analysis and threat detection</p>
+              <p className="text-gray-400 text-sm mb-4 leading-relaxed">
+                Real-time process analysis and threat detection
+              </p>
+              <div className="flex items-center justify-center space-x-2">
+                <CheckCircle className="w-4 h-4 text-green-400" />
+                <span className="text-green-400 text-sm font-medium">Active</span>
+              </div>
+            </div>
+
+            {/* Port Scanner - Active */}
+            <div className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-sm text-center hover:bg-white/8 transition-all duration-300">
+              <div className="p-3 rounded-xl bg-cyan-400/10 border border-cyan-400/20 inline-flex mb-4">
+                <Network className="w-8 h-8 text-cyan-400" />
+              </div>
+              <h3 className="text-white font-semibold text-lg mb-2">Port Scanner</h3>
+              <p className="text-gray-400 text-sm mb-4 leading-relaxed">
+                Network port analysis and vulnerability detection
+              </p>
               <div className="flex items-center justify-center space-x-2">
                 <CheckCircle className="w-4 h-4 text-green-400" />
                 <span className="text-green-400 text-sm font-medium">Active</span>
@@ -262,7 +296,6 @@ const Dashboard = () => {
 
             {/* Other modules - Coming Soon */}
             {[
-              { icon: Network, title: "Port Scanner", desc: "Network port analysis and vulnerability detection" },
               { icon: Wifi, title: "Device Discovery", desc: "Network device mapping and identification" },
               { icon: AlertTriangle, title: "Threat Analysis", desc: "Advanced security assessment and reporting" },
             ].map((module, index) => (
@@ -284,8 +317,13 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Process Table */}
-        <div className="space-y-8">{<ProcessTable />}</div>
+        <div className="space-y-8 backdrop-blur-sm">
+          <ProcessTable disableAutoRefresh={false} />
+        </div>
+
+        <div className="space-y-8 bg-transparent backdrop-blur-sm">
+          <PortScannerPanel shouldAutoStart={shouldStartPortScanning} refreshTrigger={isRefreshingAllModules} />
+        </div>
       </div>
     </div>
   )

@@ -22,17 +22,17 @@ import { useContext, useEffect, useState } from "react"
 import { ScanContext } from "../context/ScanContext"
 import axios from "axios"
 
-const ProcessTable = () => {
-  const { 
-    processData, 
-    fetchProcesses, 
-    backgroundFetchProcesses, 
-    loading, 
-    backgroundLoading, 
+const ProcessTable = ({ disableAutoRefresh = false }) => {
+  const {
+    processData,
+    fetchProcesses,
+    backgroundFetchProcesses,
+    loading,
+    backgroundLoading,
     error,
     statistics,
     getProcessCountBySeverity,
-    getSystemStats
+    getSystemStats,
   } = useContext(ScanContext)
 
   const [searchTerm, setSearchTerm] = useState("")
@@ -52,18 +52,20 @@ const ProcessTable = () => {
     // Initial load with loading spinner
     fetchProcesses()
 
-    // Background refresh every 5 seconds WITHOUT loading spinner
-    const interval = setInterval(() => {
-      backgroundFetchProcesses() // Silent refresh
-    }, 5000)
+    if (!disableAutoRefresh) {
+      // Background refresh every 5 seconds WITHOUT loading spinner
+      const interval = setInterval(() => {
+        backgroundFetchProcesses() // Silent refresh
+      }, 5000)
 
-    return () => clearInterval(interval)
-  }, [])
+      return () => clearInterval(interval)
+    }
+  }, [disableAutoRefresh])
 
   useEffect(() => {
     if (processData.length > 0) {
-      console.log("[v0] Sample process data:", processData[0])
-      console.log("[v0] All fields:", Object.keys(processData[0]))
+      //console.log("[v0] Sample process data:", processData[0])
+      //console.log("[v0] All fields:", Object.keys(processData[0]))
     }
   }, [processData])
 
@@ -173,7 +175,7 @@ const ProcessTable = () => {
   const processCount = getProcessCountBySeverity()
 
   return (
-    <div className=" backdrop-blur-md border border-gray-700/30 rounded-2xl p-6 shadow-2xl">
+    <div className="border border-gray-700/30 rounded-2xl p-6 shadow-2xlbackdrop-blur-sm">
       {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
         <div className="flex items-center space-x-4">
@@ -188,8 +190,7 @@ const ProcessTable = () => {
               >
                 System Processes
               </h2>
-              {/* Background loading indicator - small and subtle */}
-              {backgroundLoading && (
+              {backgroundLoading && !loading && (
                 <div className="flex items-center space-x-2 px-3 py-1 bg-cyan-500/10 border border-cyan-400/20 rounded-full">
                   <RefreshCw className="w-3 h-3 animate-spin text-cyan-400" />
                   <span className="text-xs text-cyan-400">Updating...</span>
@@ -216,11 +217,11 @@ const ProcessTable = () => {
       {/* Enhanced Stats Row with server data */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
         {[
-          { 
-            label: "Total", 
-            value: processCount?.total || processData.length, 
-            icon: Monitor, 
-            color: "cyan" 
+          {
+            label: "Total",
+            value: processCount?.total || processData.length,
+            icon: Monitor,
+            color: "cyan",
           },
           {
             label: "High Risk",
@@ -465,9 +466,7 @@ const ProcessTable = () => {
                       <span className="text-gray-300 text-sm font-mono">{p.mem}%</span>
                       {/* Show enhanced memory details if available */}
                       {p.memoryDetails && p.memoryDetails.virtualSize > 0 && (
-                        <div className="text-xs text-gray-500 ml-2">
-                          ({p.memoryDetails.residentSize}MB)
-                        </div>
+                        <div className="text-xs text-gray-500 ml-2">({p.memoryDetails.residentSize}MB)</div>
                       )}
                     </div>
                   </td>

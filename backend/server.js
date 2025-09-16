@@ -1,33 +1,28 @@
-const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv');
+require("dotenv").config();
 
-dotenv.config();
+const express = require("express");
+const cors = require("cors");
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const port = 5000;
 
-// Middleware
-app.use(express.json()); // Allows the app to parse JSON from the body
+
+app.use(express.json()); 
 app.use(cors({
-  origin: "http://localhost:5173", // Replace with your frontend URL
+  origin: "http://localhost:5173", 
   credentials: true,
 }));
+app.use(express.json());
 
-// Route for authentication
-const authRoutes = require('./routes/auth');
-const scanRoutes = require('./routes/scan');
-const portScanRoutes = require('./routes/portScan');
-app.use('/api/routes/ports', portScanRoutes);
-app.use('/api/routes/auth', authRoutes);
-app.use('/api/routes/scan', scanRoutes);
+// Routes
+const authRoutes = require("./routes/auth");
+app.use("/api", authRoutes);
 
-// Base route to test DB connection (as in your screenshot)
-app.get('/', async (req, res) => {
-  res.send('Backend is running and connected!');
+app.get("/", (req, res) => {
+  res.send("Backend is running!");
 });
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`Backend listening at http://localhost:${PORT}`);
+app.listen(port, () => {
+  console.log(`✅ Server running at http://localhost:${port}`);
 });
+

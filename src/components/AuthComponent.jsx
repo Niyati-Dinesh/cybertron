@@ -28,64 +28,69 @@ export default function AuthComponent() {
   const [message, setMessage] = useState("");
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setMessage("");
-    
-    if (!isLogin && formData.password !== formData.confirmPassword) {
-      setMessage("Passwords do not match!");
-      setLoading(false);
-      return;
+  e.preventDefault();
+  setLoading(true);
+  setMessage("");
+
+  if (!isLogin && formData.password !== formData.confirmPassword) {
+    setMessage("Passwords do not match!");
+    setLoading(false);
+    return;
+  }
+
+  try {
+    const payload = isLogin
+      ? {
+          email: formData.email,
+          password: formData.password,
+        }
+      : {
+          email: formData.email,
+          password: formData.password,
+          confirmPassword: formData.confirmPassword, // ✅ added confirm password
+        };
+
+    const response = isLogin
+      ? await axiosInstance.post("/login", payload)
+      : await axiosInstance.post("/register", payload);
+
+    if (response.status === 200 || response.status === 201) {
+      const { newUser, user, token } = response.data;
+      const storedUser = newUser || user;
+
+      sessionStorage.setItem("token", token);
+      sessionStorage.setItem("user", JSON.stringify(storedUser));
+      sessionStorage.setItem("userEmail", storedUser.email);
+
+      // Trigger navbar update
+      window.dispatchEvent(new CustomEvent("authChange"));
+
+      toast.success(isLogin ? "Login successful!" : "Registration successful!");
+      navigate("/success");
     }
-    
-    try {
-      const payload = {
-        email: formData.email,
-        password: formData.password,
-      };
-      
-      const response = isLogin 
-        ? await axiosInstance.post('auth/login', payload)
-        : await axiosInstance.post('auth/register', payload);
-      
-      if (response.status === 200 || response.status === 201) {
-        const { newUser, user, token } = response.data;
-        const storedUser = newUser || user;
-        
-        sessionStorage.setItem("token", token);
-        sessionStorage.setItem("user", JSON.stringify(storedUser));
-        sessionStorage.setItem("userEmail", storedUser.email);
-        
-        // Trigger navbar update
-        window.dispatchEvent(new CustomEvent('authChange'));
-        
-        toast.success(
-          isLogin ? "Login successful!" : "Registration successful!"
-        );
-        navigate("/success");
-      }
-    } catch (error) {
-      let errorMessage = "Something went wrong. Please try again.";
-      
-      if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.response?.data?.error) {
-        errorMessage = error.response.data.error;
-      } else if (error.response?.status === 400) {
-        errorMessage = isLogin 
-          ? "Invalid email or password" 
-          : "Registration failed. Please check your information.";
-      } else if (error.response?.status === 404) {
-        errorMessage = "Email not found. Please check your email or sign up.";
-      } else if (error.response?.status >= 500) {
-        errorMessage = "Server error. Please try again later.";
-      }
-      
-      setMessage(errorMessage);
-    } finally {
-      setLoading(false);
+  } catch (error) {
+    let errorMessage = "Something went wrong. Please try again.";
+
+    if (error.response?.data?.message) {
+      errorMessage = error.response.data.message;
+    } else if (error.response?.data?.error) {
+      errorMessage = error.response.data.error;
+    } else if (error.response?.status === 400) {
+      errorMessage = isLogin
+        ? "Invalid email or password"
+        : "Registration failed. Please check your information.";
+    } else if (error.response?.status === 404) {
+      errorMessage = "Email not found. Please check your email or sign up.";
+    } else if (error.response?.status >= 500) {
+      errorMessage = "Server error. Please try again later.";
     }
-  };
+
+    setMessage(errorMessage);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <>
@@ -93,7 +98,7 @@ export default function AuthComponent() {
         {/* Auth Form */}
         <div className="relative z-10 w-full max-w-md mx-4">
           <div className="bg-black/40 backdrop-blur-sm border border-white/20 rounded-2xl p-8 shadow-2xl">
-            {/* Toggle Buttons */}
+            
             <div className="flex mb-8 bg-white/10 rounded-lg p-1">
               <button
                 onClick={() => {
@@ -125,7 +130,7 @@ export default function AuthComponent() {
               </button>
             </div>
 
-            {/* Form Title */}
+            
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-white mb-2">
                 {isLogin ? "Welcome Back" : "Create Account"}
@@ -137,7 +142,7 @@ export default function AuthComponent() {
               </p>
             </div>
 
-            {/* Error Message */}
+            
             {message && (
               <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-3">
                 <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
@@ -158,9 +163,9 @@ export default function AuthComponent() {
               </div>
             )}
 
-            {/* Form */}
+            
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Email Field */}
+             
               <div className="space-y-2">
                 <label className="text-white text-sm font-medium">Email</label>
                 <div className="relative">
@@ -207,7 +212,7 @@ export default function AuthComponent() {
                 </div>
               </div>
 
-              {/* Confirm Password Field (Register only) */}
+              
               {!isLogin && (
                 <div className="space-y-2">
                   <label className="text-white text-sm font-medium">
@@ -252,7 +257,7 @@ export default function AuthComponent() {
                 </div>
               )}
 
-              {/* Submit Button */}
+              
               <button
                 type="submit"
                 disabled={

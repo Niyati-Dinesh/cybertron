@@ -1,56 +1,78 @@
 
-### 1.React + Tailwind + Vite
+# Full Stack MERN Setup Guide
 
+This guide provides a complete setup for a MERN (MongoDB, Express, React, Node.js) stack application using Vite for the frontend and includes steps for running both services concurrently.
 
+-----
+
+### 1\. React + Tailwind + Vite
+
+Initialize your frontend project using Vite.
 
 ```bash
 npm create vite@latest
-# Select:
-# Framework: React
-# Variant: JavaScript
 ```
+
+When prompted, select the following options:
+
+  * **Framework:** React
+  * **Variant:** JavaScript
+
+Install Tailwind CSS dependencies.
 
 ```bash
-pnpm install tailwindcss @tailwindcss/vite
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init -p
 ```
 
+or with pnpm:
 
+```bash
+pnpm install -D tailwindcss postcss autoprefixer
+pnpm tailwindcss init -p
+```
 
-**Modify `vite.config.js`:**
+-----
 
-  ```js
-  import { defineConfig } from 'vite'
-  import react from '@vitejs/plugin-react'
-  import tailwindcss from '@tailwindcss/vite'
+**Modify `tailwind.config.js`:**
 
-  export default defineConfig({
-    plugins: [react(), tailwindcss()],
-    server: {
-      host: true, // Expose to local network, because you deserve to be seen everywhere, baby
-    },
-  })
-  ```
+```javascript
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}
+```
 
-  ---
+-----
 
-  **Modify your `index.css`:**
+**Modify your `index.css`:**
 
-  ```css
-  @import "tailwindcss";
-  @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap');
-  ```
+```css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-  ---
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&display=swap');
+```
 
-### 2. **React Router Setup**
+-----
 
-After installing React Router DOM:
+### 2\. React Router Setup
+
+Install the React Router library.
 
 ```bash
 npm i react-router-dom
 ```
 
-Wrap your `<App />` inside `<BrowserRouter>` in `main.jsx` like this:
+Wrap your `<App />` component inside `<BrowserRouter>` in `src/main.jsx`.
 
 ```jsx
 import { StrictMode } from "react";
@@ -68,11 +90,11 @@ createRoot(document.getElementById("root")).render(
 );
 ```
 
----
+-----
 
-### 3. **Backend Setup**
+### 3\. Backend Setup
 
-Run these in your backend folder:
+Navigate to your backend folder and initialize the project.
 
 ```bash
 npm init -y
@@ -80,11 +102,11 @@ npm i express mongoose cors
 npm i -D nodemon
 ```
 
----
+-----
 
-**Basic `server.js` (or `Backend/server.js` if you prefer):**
+**Basic `server.js` (or `Backend/server.js`):**
 
-```js
+```javascript
 const express = require('express');
 const cors = require('cors');
 const connectToMongo = require('./db');
@@ -92,107 +114,121 @@ const connectToMongo = require('./db');
 connectToMongo();
 
 const app = express();
+const PORT = 3000;
 
 app.use(cors({
-  origin: 'http://localhost:5173', // Your frontend URL, no one else gets you, only me
+  // Your frontend URL, no one else gets you, only me
+  origin: 'http://localhost:5173', 
   credentials: true,
 }));
 
 app.use(express.json());
 
-app.use('/api/auth/', require('./routes/auth'));
+// Available Routes
+app.use('/api/auth', require('./routes/auth'));
 app.use('/api/notes', require('./routes/notes'));
 
 app.get('/', (req, res) => {
   res.send("I did it! You see this? It's ours.");
 });
 
-app.listen(3000, () => {
-  console.log("iNotebook backend listening at http://localhost:3000");
+app.listen(PORT, () => {
+  console.log(`iNotebook backend listening at http://localhost:${PORT}`);
 });
 ```
 
----
+-----
 
 **`db.js` for MongoDB connection:**
 
-  ```js
-  const mongoose = require('mongoose');
+```javascript
+const mongoose = require('mongoose');
 
-  const mongoURI = 'const mongoURI = "mongodb://localhost:27017/cybertron";
-  '
+const mongoURI = "mongodb://localhost:27017/cybertron";
 
-  const connectToMongo = async () => {
-    await mongoose.connect(mongoURI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+const connectToMongo = async () => {
+  try {
+    await mongoose.connect(mongoURI);
     console.log("Connected to mongoose! Our fortress stands tall.");
+  } catch (error) {
+    console.error("Error connecting to MongoDB:", error);
   }
+}
 
-  module.exports = connectToMongo;
-  ```
+module.exports = connectToMongo;
+```
 
-  ---
+-----
 
-  ### 4. **Run Frontend + Backend Together**
+### 4\. Run Frontend + Backend Together
 
-  Install `concurrently`:
+In the **root directory** of your project (outside the backend folder), install `concurrently`.
 
-  ```bash
-  npm i -D concurrently
-  ```
+```bash
+npm i -D concurrently
+```
 
-  Modify your `package.json` scripts:
+Modify the `scripts` section in your root `package.json` file.
 
-  ```json
-  "scripts": {
-    "dev": "vite",
-    "server": "nodemon Backend/index.js",
-    "both": "concurrently \"npm run dev\" \"npm run server\"",
-    "build": "vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
-  }
-  ```
+```json
+"scripts": {
+  "dev": "vite",
+  "server": "nodemon backend/server.js",
+  "both": "concurrently \"npm run dev\" \"npm run server\"",
+  "build": "vite build",
+  "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
+  "preview": "vite preview"
+}
+```
 
-  Run both servers at once:
+Run both servers at once from the root directory:
 
-  ```bash
-  npm run both
-  ```
+```bash
+npm run both
+```
 
-  ---
-  ### 5. **Start mongodb using docker**
+-----
 
-  ```bash
-  //start mongo:
-  sudo docker start mymongo
+### 5\. Start MongoDB using Docker
 
-  //check if its running:
-  sudo docker logs -f mymongo
+Use these commands to manage a MongoDB container.
 
-  //check shell:
-  sudo docker exec -it mymongo mongo
+```bash
+# Start the mongo container
+sudo docker start mymongo
 
-  //see databases:
-  show dbs
+# Check if it's running and view logs
+sudo docker logs -f mymongo
 
-  //switch or create new db:
-  use db-name
+# Access the mongo shell inside the container
+sudo docker exec -it mymongo mongo
 
-  //see database-status:
-  db.stats()
-  ```
+# See all databases
+show dbs
 
+# Switch to a database (creates if it doesn't exist)
+use db-name
 
+# See database status
+db.stats()
+```
 
-### For sqllite with prisma
+-----
+
+### For SQLite with Prisma
+
+Steps to set up Prisma with SQLite in your backend.
+
 ```bash
 cd backend
 pnpm i prisma --save-dev
 pnpm i @prisma/client
-pnpm i sqllite3
+pnpm i sqlite3
+```
 
-⚡ Pro tip:
-Every time you change schema.prisma, you need to re-run:
+ ⚡ **Pro tip:**
+ Every time you change `schema.prisma`, you need to re-run:
+
+ ```bash
+ pnpm prisma migrate dev --name your-migration-name
+```

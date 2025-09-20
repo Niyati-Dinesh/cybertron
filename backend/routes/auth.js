@@ -1,29 +1,37 @@
-const express = require("express");
+const express = require('express');
+const { body, validationResult } = require('express-validator');
+const authController = require('../controllers/authController');
+
 const router = express.Router();
-const { check } = require("express-validator");
-const authController = require("../controllers/authControllers");
-const { protect } = require("../middleware/authMiddleware");
 
-router.post(
-  "/register",
-  [
-    check("email", "Please include a valid email").isEmail(),
-    check("password", "Password is required").exists(),
-    check("confirmPassword", "Confirm password is required").exists(),
-  ],
-  authController.register
-);
+// Validation middleware for login
+const loginValidation = [
+  body('email').isEmail().withMessage('Please enter a valid email address'),
+  body('password').notEmpty().withMessage('Password is required'),
+];
 
-router.post(
-  "/login",
-  [
-    check("email", "Please include a valid email").isEmail(),
-    check("password", "Password is required").exists(),
-  ],
-  authController.login
-);
+// Validation middleware for register
+const registerValidation = [
+  body('email').isEmail().withMessage('Please enter a valid email address'),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters long'),
+];
 
-router.get("/private", protect, (req, res) => {
-  res.json({ message: "Access granted", userId: req.userId });
+// Login route -> http://localhost:5000/api/routes/auth/login
+router.post('/login', loginValidation, (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  authController.login(req, res, next);
 });
+
+// Register route -> http://localhost:5000/api/routes/auth/register
+router.post('/register', registerValidation, (req, res, next) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+  authController.register(req, res, next);
+});
+
 module.exports = router;

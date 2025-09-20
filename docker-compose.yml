@@ -1,0 +1,17 @@
+services:
+  metasploitable:
+    image: tleemcjr/metasploitable2
+    container_name: metasploitable-lab
+    ports:
+      - "21:21"      # FTP (Vulnerable vsftpd 2.3.4)
+      - "22:22"      # SSH
+      - "23:23"      # Telnet
+      - "80:80"      # HTTP
+      - "139:139"    # NetBIOS
+      - "445:445"    # SMB
+      - "3306:3306"  # MySQL
+      - "5432:5432"  # PostgreSQL
+      - "8080:8180"  # Tomcat Server
+    restart: unless-stopped
+
+#docker-compose up -d - run this to open ports for testing

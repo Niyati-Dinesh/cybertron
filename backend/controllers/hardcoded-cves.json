@@ -1,0 +1,102 @@
+[
+  {
+    "productKeywords": ["openSSH", "sshd", "ssh"],
+    "cves": [
+      { "id": "CVE-2023-38408", "description": "OpenSSH remote code execution vulnerability in forwarded ssh-agent", "severity": "HIGH" },
+      { "id": "CVE-2021-41617", "description": "OpenSSH user enumeration timing side-channel", "severity": "MEDIUM" },
+      { "id": "CVE-2018-15473", "description": "OpenSSH username enumeration vulnerability", "severity": "MEDIUM" },
+      { "id": "CVE-2016-0777", "description": "OpenSSH information disclosure via roaming feature", "severity": "MEDIUM" }
+    ]
+  },
+  {
+    "productKeywords": ["apache", "httpd", "apache httpd"],
+    "cves": [
+      { "id": "CVE-2023-25690", "description": "Apache HTTP Server mod_proxy vulnerability allowing HTTP request smuggling", "severity": "HIGH" },
+      { "id": "CVE-2021-41773", "description": "Path traversal and file disclosure in Apache HTTP Server 2.4.49", "severity": "HIGH" },
+      { "id": "CVE-2020-11984", "description": "Apache HTTP Server mod_uwsgi buffer overflow", "severity": "HIGH" },
+      { "id": "CVE-2019-0211", "description": "Apache HTTP Server privilege escalation", "severity": "HIGH" }
+    ]
+  },
+  {
+    "productKeywords": ["nginx"],
+    "cves": [
+      { "id": "CVE-2021-23017", "description": "nginx DNS resolver vulnerability allowing remote code execution", "severity": "HIGH" },
+      { "id": "CVE-2019-20372", "description": "nginx stack-based buffer overflow in HTTP/2", "severity": "HIGH" },
+      { "id": "CVE-2018-16843", "description": "nginx HTTP/2 memory corruption vulnerability", "severity": "HIGH" },
+      { "id": "CVE-2013-2028", "description": "nginx range filter denial of service", "severity": "MEDIUM" }
+    ]
+  },
+  {
+    "productKeywords": ["mysql", "mariadb", "mysqld"],
+    "cves": [
+      { "id": "CVE-2022-21587", "description": "MySQL Server privilege escalation vulnerability", "severity": "HIGH" },
+      { "id": "CVE-2022-21223", "description": "MySQL Server denial of service vulnerability", "severity": "MEDIUM" },
+      { "id": "CVE-2021-35619", "description": "MySQL Server unauthorized access vulnerability", "severity": "HIGH" },
+      { "id": "CVE-2020-25705", "description": "MySQL privilege escalation vulnerability", "severity": "HIGH" }
+    ]
+  },
+  {
+    "productKeywords": ["express", "node.js express framework", "node express"],
+    "cves": [
+      { "id": "CVE-2022-24999", "description": "Express.js prototype pollution vulnerability affecting versions < 4.17.3", "severity": "HIGH" },
+      { "id": "CVE-2015-8855", "description": "Express.js directory traversal vulnerability in send module", "severity": "MEDIUM" },
+      { "id": "CVE-2014-6393", "description": "Express.js information disclosure via error messages", "severity": "MEDIUM" }
+    ]
+  },
+  {
+    "productKeywords": ["redis", "redis-server"],
+    "cves": [
+      { "id": "CVE-2022-24834", "description": "Redis Lua sandbox escape vulnerability", "severity": "HIGH" },
+      { "id": "CVE-2021-32761", "description": "Redis integer overflow vulnerability", "severity": "MEDIUM" },
+      { "id": "CVE-2015-8080", "description": "Redis denial of service vulnerability", "severity": "MEDIUM" }
+    ]
+  },
+  {
+    "productKeywords": ["postgresql", "postgres", "postgresql-server"],
+    "cves": [
+      { "id": "CVE-2023-2454", "description": "PostgreSQL memory disclosure vulnerability", "severity": "MEDIUM" },
+      { "id": "CVE-2022-41862", "description": "PostgreSQL privilege escalation vulnerability", "severity": "HIGH" },
+      { "id": "CVE-2021-23214", "description": "PostgreSQL information disclosure vulnerability", "severity": "MEDIUM" }
+    ]
+  },
+  {
+    "productKeywords": ["tomcat", "apache tomcat"],
+    "cves": [
+      { "id": "CVE-2023-28708", "description": "Apache Tomcat remote code execution vulnerability", "severity": "HIGH" },
+      { "id": "CVE-2020-1938", "description": "Apache Tomcat AJP connector vulnerability (Ghostcat)", "severity": "HIGH" },
+      { "id": "CVE-2019-0232", "description": "Apache Tomcat remote code execution on Windows", "severity": "HIGH" }
+    ]
+  },
+  {
+    "productKeywords": ["iis", "microsoft-iis", "internet information services"],
+    "cves": [
+      { "id": "CVE-2023-36434", "description": "IIS Server denial of service vulnerability", "severity": "MEDIUM" },
+      { "id": "CVE-2021-31166", "description": "IIS Server remote code execution vulnerability", "severity": "HIGH" },
+      { "id": "CVE-2017-7269", "description": "IIS 6.0 buffer overflow vulnerability", "severity": "HIGH" }
+    ]
+  },
+  {
+    "productKeywords": ["ftp", "vsftpd", "proftpd", "pure-ftpd"],
+    "cves": [
+      { "id": "CVE-2023-27555", "description": "VSFTPD backdoor vulnerability", "severity": "CRITICAL" },
+      { "id": "CVE-2021-46848", "description": "ProFTPD remote code execution vulnerability", "severity": "HIGH" },
+      { "id": "CVE-2020-9273", "description": "ProFTPD denial of service vulnerability", "severity": "MEDIUM" }
+    ]
+  },
+  {
+    "productKeywords": ["samba", "smbd"],
+    "cves": [
+      { "id": "CVE-2021-44142", "description": "Samba remote code execution vulnerability", "severity": "HIGH" },
+      { "id": "CVE-2017-7494", "description": "Samba remote code execution (EternalRed)", "severity": "HIGH" },
+      { "id": "CVE-2015-0240", "description": "Samba denial of service vulnerability", "severity": "MEDIUM" }
+    ]
+  },
+  {
+    "productKeywords": ["bind", "named", "dns-server"],
+    "cves": [
+      { "id": "CVE-2023-2828", "description": "BIND denial of service vulnerability", "severity": "MEDIUM" },
+      { "id": "CVE-2021-25219", "description": "BIND remote code execution vulnerability", "severity": "HIGH" },
+      { "id": "CVE-2020-8625", "description": "BIND denial of service vulnerability", "severity": "MEDIUM" }
+    ]
+  }
+]

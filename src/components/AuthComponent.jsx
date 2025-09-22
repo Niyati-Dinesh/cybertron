@@ -1,5 +1,14 @@
 import { useState } from "react";
-import { Mail, Lock, User, Eye, EyeOff, LogIn, UserPlus, AlertCircle } from "lucide-react";
+import {
+  Mail,
+  Lock,
+  User,
+  Eye,
+  EyeOff,
+  LogIn,
+  UserPlus,
+  AlertCircle,
+} from "lucide-react";
 import axiosInstance from "../api/axiosInstance";
 import toast from "react-hot-toast";
 import { Navigate, useNavigate } from "react-router-dom";
@@ -31,34 +40,34 @@ export default function AuthComponent() {
     e.preventDefault();
     setLoading(true);
     setMessage("");
-    
+
     if (!isLogin && formData.password !== formData.confirmPassword) {
       setMessage("Passwords do not match!");
       setLoading(false);
       return;
     }
-    
+
     try {
       const payload = {
         email: formData.email,
         password: formData.password,
       };
-      
-      const response = isLogin 
-        ? await axiosInstance.post('auth/login', payload)
-        : await axiosInstance.post('auth/register', payload);
-      
+
+      const response = isLogin
+        ? await axiosInstance.post("auth/login", payload)
+        : await axiosInstance.post("auth/register", payload);
+
       if (response.status === 200 || response.status === 201) {
         const { newUser, user, token } = response.data;
         const storedUser = newUser || user;
-        
+
         sessionStorage.setItem("token", token);
         sessionStorage.setItem("user", JSON.stringify(storedUser));
         sessionStorage.setItem("userEmail", storedUser.email);
-        
+
         // Trigger navbar update
-        window.dispatchEvent(new CustomEvent('authChange'));
-        
+        window.dispatchEvent(new CustomEvent("authChange"));
+
         toast.success(
           isLogin ? "Login successful!" : "Registration successful!"
         );
@@ -66,21 +75,21 @@ export default function AuthComponent() {
       }
     } catch (error) {
       let errorMessage = "Something went wrong. Please try again.";
-      
+
       if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.response?.data?.error) {
         errorMessage = error.response.data.error;
       } else if (error.response?.status === 400) {
-        errorMessage = isLogin 
-          ? "Invalid email or password" 
+        errorMessage = isLogin
+          ? "Invalid email or password"
           : "Registration failed. Please check your information.";
       } else if (error.response?.status === 404) {
         errorMessage = "Email not found. Please check your email or sign up.";
       } else if (error.response?.status >= 500) {
         errorMessage = "Server error. Please try again later.";
       }
-      
+
       setMessage(errorMessage);
     } finally {
       setLoading(false);

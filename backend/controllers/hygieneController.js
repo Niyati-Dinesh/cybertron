@@ -1,40 +1,34 @@
 const { exec } = require("child_process");
 const { promisify } = require("util");
-const fs = require('fs');      // <-- Add this import
-const path = require('path');  // <-- Add this import
-const os = require('os');      // <-- Add this import
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
 
 const execAsync = promisify(exec);
-
-// ... (The parsePaths and checkWorldWritableBinaries functions are unchanged)
 
 const parsePaths = (stdout) => {
   if (!stdout) return [];
   return stdout.trim().split('\n').filter(line => line.length > 0);
 };
 
+// worldwritable file checks
 async function checkWorldWritableBinaries() {
-  const command = `for dir in $(echo $PATH | tr ':' ' '); do find "$dir" -type f -perm -002 -printf '%p\\n' 2>/dev/null; done`;
+ 
+  const command = `for dir in $(echo $PATH | tr ':' ' '); do find "$dir" -type f -perm -002 -printf '%p\\n' 2>/dev/null || true; done`;
   const { stdout } = await execAsync(command);
   console.log("✅ Checked for world-writable binaries.");
   return parsePaths(stdout);
 }
 
-
-// --- THIS FUNCTION IS UPDATED ---
-/**
- * 2. Checks for suspicious executables in common staging directories.
- */
+//checks for suspicious .exe files in /tmp and Downloads
 async function checkSuspiciousExecutables() {
   const dirsToScan = ['/tmp'];
   const downloadsDir = path.join(os.homedir(), 'Downloads');
 
-  // ✅ Safely check if the Downloads directory exists before adding it
   if (fs.existsSync(downloadsDir)) {
     dirsToScan.push(downloadsDir);
   }
 
-  // Dynamically build the command with only the directories that exist
   const command = `find ${dirsToScan.join(' ')} -type f -executable -printf '%p\\n' 2>/dev/null`;
   
   const { stdout } = await execAsync(command);
@@ -42,8 +36,7 @@ async function checkSuspiciousExecutables() {
   return parsePaths(stdout);
 }
 
-// ... (The checkDiskUsage and runHygieneScan functions are unchanged)
-
+//checks for disk usages
 async function checkDiskUsage() {
   const command = `du -h /var /home 2>/dev/null | sort -rh | head -n 5`;
   const { stdout } = await execAsync(command);
@@ -59,6 +52,7 @@ async function checkDiskUsage() {
   return parsed;
 }
 
+//performs hygiene scan : using every checks and provides suggestion
 exports.runHygieneScan = async (req, res) => {
   console.log("🚀 Starting file-system hygiene scan...");
   try {

@@ -1,9 +1,11 @@
 import React from 'react'
 
-export default function HygieneScanner() {
+export default function NetworkScanner() {
   return (
     <div>
-      {/* TODO */}
+      
+{/* TODO */}
+
     </div>
   )
 }

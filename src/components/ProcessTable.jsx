@@ -1,4 +1,3 @@
-"use client"
 import {
   Search,
   RefreshCw,
@@ -17,10 +16,10 @@ import {
   Zap,
   Server,
   Gauge,
-} from "lucide-react"
-import { useContext, useEffect, useState } from "react"
-import { ScanContext } from "../context/ScanContext"
-import axios from "axios"
+} from "lucide-react";
+import { useContext, useEffect, useState } from "react";
+import { ScanContext } from "../context/ScanContext";
+import axios from "axios";
 
 const ProcessTable = ({ disableAutoRefresh = false }) => {
   const {
@@ -33,46 +32,50 @@ const ProcessTable = ({ disableAutoRefresh = false }) => {
     statistics,
     getProcessCountBySeverity,
     getSystemStats,
-  } = useContext(ScanContext)
+  } = useContext(ScanContext);
 
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedSeverity, setSelectedSeverity] = useState("All")
-  const [expandedArgs, setExpandedArgs] = useState(new Set())
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm)
-  const [visibleProcessesCount, setVisibleProcessesCount] = useState(10)
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedSeverity, setSelectedSeverity] = useState("All");
+  const [expandedArgs, setExpandedArgs] = useState(new Set());
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState(searchTerm);
+  const [visibleProcessesCount, setVisibleProcessesCount] = useState(10);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm)
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [searchTerm])
+      setDebouncedSearchTerm(searchTerm);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
   useEffect(() => {
     // Initial load with loading spinner
-    fetchProcesses()
+    fetchProcesses();
 
     if (!disableAutoRefresh) {
       // Background refresh every 5 seconds WITHOUT loading spinner
       const interval = setInterval(() => {
-        backgroundFetchProcesses() // Silent refresh
-      }, 5000)
+        backgroundFetchProcesses(); // Silent refresh
+      }, 5000);
 
-      return () => clearInterval(interval)
+      return () => clearInterval(interval);
     }
-  }, [disableAutoRefresh])
+  }, [disableAutoRefresh]);
 
   useEffect(() => {
     if (processData.length > 0) {
       //console.log("[v0] Sample process data:", processData[0])
       //console.log("[v0] All fields:", Object.keys(processData[0]))
     }
-  }, [processData])
+  }, [processData]);
 
   const fixProcessData = (processes) => {
     return processes.map((process) => {
       // Check if data is misaligned (username in etime field)
-      if (process.etime && typeof process.etime === "string" && process.etime.match(/^[a-zA-Z]+$/)) {
+      if (
+        process.etime &&
+        typeof process.etime === "string" &&
+        process.etime.match(/^[a-zA-Z]+$/)
+      ) {
         // Data is misaligned - try to fix it
         return {
           ...process,
@@ -82,97 +85,104 @@ const ProcessTable = ({ disableAutoRefresh = false }) => {
             process.args && process.args.includes(" ")
               ? process.args.substring(process.args.indexOf(" ") + 1)
               : process.args,
-        }
+        };
       }
-      return process
-    })
-  }
+      return process;
+    });
+  };
 
   const trustProcess = async (comm, args) => {
-    const token = sessionStorage.getItem("token")
+    const token = sessionStorage.getItem("token");
     try {
       await axios.post(
         "http://localhost:5000/api/routes/scan/trust-process",
         { comm, args },
-        { headers: { authtoken: token } },
-      )
+        { headers: { authtoken: token } }
+      );
       // Silent refresh after trust action
-      backgroundFetchProcesses()
+      backgroundFetchProcesses();
     } catch (err) {
-      alert("Failed to trust process.")
-      console.error("Trust process error:", err.response?.data || err.message)
+      alert("Failed to trust process.");
+      console.error("Trust process error:", err.response?.data || err.message);
     }
-  }
+  };
 
   const killProcess = async (pid) => {
-    const token = sessionStorage.getItem("token")
+    const token = sessionStorage.getItem("token");
     try {
-      await axios.post("http://localhost:5000/api/routes/scan/kill-process", { pid }, { headers: { authtoken: token } })
+      await axios.post(
+        "http://localhost:5000/api/routes/scan/kill-process",
+        { pid },
+        { headers: { authtoken: token } }
+      );
       // Silent refresh after kill action
-      backgroundFetchProcesses()
+      backgroundFetchProcesses();
     } catch (err) {
-      alert(`Failed to kill process ${pid}.`)
-      console.error("Kill process error:", err.response?.data || err.message)
+      alert(`Failed to kill process ${pid}.`);
+      console.error("Kill process error:", err.response?.data || err.message);
     }
-  }
+  };
 
   const getBadgeColor = (severity) => {
     switch (severity) {
       case "High":
-        return "bg-red-500/10 text-red-400 border-red-500/20"
+        return "bg-red-500/10 text-red-400 border-red-500/20";
       case "Medium":
-        return "bg-yellow-500/10 text-yellow-400 border-yellow-500/20"
+        return "bg-yellow-500/10 text-yellow-400 border-yellow-500/20";
       case "Trusted":
-        return "bg-cyan-500/10 text-cyan-400 border-cyan-500/20"
+        return "bg-cyan-500/10 text-cyan-400 border-cyan-500/20";
       default:
-        return "bg-green-500/10 text-green-400 border-green-500/20"
+        return "bg-green-500/10 text-green-400 border-green-500/20";
     }
-  }
+  };
 
   const getSeverityIcon = (severity) => {
     switch (severity) {
       case "High":
-        return <AlertTriangle className="w-4 h-4" />
+        return <AlertTriangle className="w-4 h-4" />;
       case "Medium":
-        return <AlertTriangle className="w-4 h-4" />
+        return <AlertTriangle className="w-4 h-4" />;
       case "Trusted":
-        return <Shield className="w-4 h-4" />
+        return <Shield className="w-4 h-4" />;
       default:
-        return <Shield className="w-4 h-4" />
+        return <Shield className="w-4 h-4" />;
     }
-  }
+  };
 
   const rawFilteredProcesses = processData.filter(
     (process) =>
       (selectedSeverity === "All" || process.severity === selectedSeverity) &&
       (process.comm.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-        (process.user && process.user.toLowerCase().includes(debouncedSearchTerm.toLowerCase())) ||
-        process.pid.toString().includes(debouncedSearchTerm)),
-  )
+        (process.user &&
+          process.user
+            .toLowerCase()
+            .includes(debouncedSearchTerm.toLowerCase())) ||
+        process.pid.toString().includes(debouncedSearchTerm))
+  );
 
-  const filteredProcesses = fixProcessData(rawFilteredProcesses)
+  const filteredProcesses = fixProcessData(rawFilteredProcesses);
 
   const toggleArgsExpansion = (index) => {
-    const newExpanded = new Set(expandedArgs)
+    const newExpanded = new Set(expandedArgs);
     if (newExpanded.has(index)) {
-      newExpanded.delete(index)
+      newExpanded.delete(index);
     } else {
-      newExpanded.add(index)
+      newExpanded.add(index);
     }
-    setExpandedArgs(newExpanded)
-  }
+    setExpandedArgs(newExpanded);
+  };
 
   const clearFilters = () => {
-    setSearchTerm("")
-    setDebouncedSearchTerm("")
-    setSelectedSeverity("All")
-  }
+    setSearchTerm("");
+    setDebouncedSearchTerm("");
+    setSelectedSeverity("All");
+  };
 
-  const hasMoreProcesses = filteredProcesses.length > visibleProcessesCount
+  const hasMoreProcesses = filteredProcesses.length > visibleProcessesCount;
 
   // Get enhanced stats and process counts
-  const systemStats = getSystemStats()
-  const processCount = getProcessCountBySeverity()
+  const systemStats = getSystemStats();
+  const processCount = getProcessCountBySeverity();
 
   return (
     <div className="border border-gray-700/30 rounded-2xl p-6 shadow-2xlbackdrop-blur-sm">
@@ -197,7 +207,10 @@ const ProcessTable = ({ disableAutoRefresh = false }) => {
                 </div>
               )}
             </div>
-            <p className="text-gray-400 text-sm" style={{ fontFamily: "Open Sans, sans-serif" }}>
+            <p
+              className="text-gray-400 text-sm"
+              style={{ fontFamily: "Open Sans, sans-serif" }}
+            >
               Real-time monitoring • Auto-refresh every 5s
             </p>
           </div>
@@ -206,7 +219,9 @@ const ProcessTable = ({ disableAutoRefresh = false }) => {
         {/* Manual Scan Button */}
         <button
           onClick={() => fetchProcesses(true)} // Manual scan with loading
-          className={`flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-400/30 text-cyan-300 rounded-xl hover:from-cyan-500/30 hover:to-blue-500/30 transition-all duration-300 ${loading ? "animate-pulse" : ""}`}
+          className={`flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-400/30 text-cyan-300 rounded-xl hover:from-cyan-500/30 hover:to-blue-500/30 transition-all duration-300 ${
+            loading ? "animate-pulse" : ""
+          }`}
           disabled={loading}
         >
           <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
@@ -225,33 +240,46 @@ const ProcessTable = ({ disableAutoRefresh = false }) => {
           },
           {
             label: "High Risk",
-            value: processCount?.high || processData.filter((p) => p.severity === "High").length,
+            value:
+              processCount?.high ||
+              processData.filter((p) => p.severity === "High").length,
             icon: AlertTriangle,
             color: "red",
           },
           {
             label: "Medium Risk",
-            value: processCount?.medium || processData.filter((p) => p.severity === "Medium").length,
+            value:
+              processCount?.medium ||
+              processData.filter((p) => p.severity === "Medium").length,
             icon: AlertTriangle,
             color: "yellow",
           },
           {
             label: "Trusted",
-            value: processCount?.trusted || processData.filter((p) => p.severity === "Trusted").length,
+            value:
+              processCount?.trusted ||
+              processData.filter((p) => p.severity === "Trusted").length,
             icon: Shield,
             color: "blue",
           },
           {
             label: "Safe",
-            value: processCount?.low || processData.filter((p) => p.severity === "Low").length,
+            value:
+              processCount?.low ||
+              processData.filter((p) => p.severity === "Low").length,
             icon: Shield,
             color: "green",
           },
         ].map((stat, idx) => (
-          <div key={idx} className="bg-black/30 border border-gray-700/20 rounded-xl p-4 backdrop-blur-sm">
+          <div
+            key={idx}
+            className="bg-black/30 border border-gray-700/20 rounded-xl p-4 backdrop-blur-sm"
+          >
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-400 text-xs uppercase tracking-wide">{stat.label}</p>
+                <p className="text-gray-400 text-xs uppercase tracking-wide">
+                  {stat.label}
+                </p>
                 <p className="text-2xl font-bold text-white">{stat.value}</p>
               </div>
               <stat.icon className={`w-6 h-6 text-${stat.color}-400`} />
@@ -266,8 +294,12 @@ const ProcessTable = ({ disableAutoRefresh = false }) => {
           <div className="bg-black/20 border border-gray-700/20 rounded-xl p-4 backdrop-blur-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-400 text-xs uppercase tracking-wide">Total CPU</p>
-                <p className="text-xl font-bold text-white">{statistics.totalCpuUsage}%</p>
+                <p className="text-gray-400 text-xs uppercase tracking-wide">
+                  Total CPU
+                </p>
+                <p className="text-xl font-bold text-white">
+                  {statistics.totalCpuUsage}%
+                </p>
               </div>
               <Cpu className="w-5 h-5 text-orange-400" />
             </div>
@@ -275,8 +307,12 @@ const ProcessTable = ({ disableAutoRefresh = false }) => {
           <div className="bg-black/20 border border-gray-700/20 rounded-xl p-4 backdrop-blur-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-400 text-xs uppercase tracking-wide">Total Memory</p>
-                <p className="text-xl font-bold text-white">{statistics.totalMemoryUsage}%</p>
+                <p className="text-gray-400 text-xs uppercase tracking-wide">
+                  Total Memory
+                </p>
+                <p className="text-xl font-bold text-white">
+                  {statistics.totalMemoryUsage}%
+                </p>
               </div>
               <HardDrive className="w-5 h-5 text-purple-400" />
             </div>
@@ -284,8 +320,12 @@ const ProcessTable = ({ disableAutoRefresh = false }) => {
           <div className="bg-black/20 border border-gray-700/20 rounded-xl p-4 backdrop-blur-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-400 text-xs uppercase tracking-wide">High CPU</p>
-                <p className="text-xl font-bold text-white">{statistics.highCpuProcesses}</p>
+                <p className="text-gray-400 text-xs uppercase tracking-wide">
+                  High CPU
+                </p>
+                <p className="text-xl font-bold text-white">
+                  {statistics.highCpuProcesses}
+                </p>
               </div>
               <Gauge className="w-5 h-5 text-red-400" />
             </div>
@@ -293,8 +333,12 @@ const ProcessTable = ({ disableAutoRefresh = false }) => {
           <div className="bg-black/20 border border-gray-700/20 rounded-xl p-4 backdrop-blur-sm">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-400 text-xs uppercase tracking-wide">Root Processes</p>
-                <p className="text-xl font-bold text-white">{statistics.rootProcesses}</p>
+                <p className="text-gray-400 text-xs uppercase tracking-wide">
+                  Root Processes
+                </p>
+                <p className="text-xl font-bold text-white">
+                  {statistics.rootProcesses}
+                </p>
               </div>
               <Server className="w-5 h-5 text-amber-400" />
             </div>
@@ -417,8 +461,12 @@ const ProcessTable = ({ disableAutoRefresh = false }) => {
                 <td colSpan="9" className="text-center py-12">
                   <div className="flex flex-col items-center space-y-4">
                     <RefreshCw className="w-8 h-8 animate-spin text-cyan-400" />
-                    <span className="text-gray-300 text-lg font-medium">Analyzing system processes...</span>
-                    <span className="text-gray-500 text-sm">This may take a few moments</span>
+                    <span className="text-gray-300 text-lg font-medium">
+                      Analyzing system processes...
+                    </span>
+                    <span className="text-gray-500 text-sm">
+                      This may take a few moments
+                    </span>
                   </div>
                 </td>
               </tr>
@@ -427,108 +475,149 @@ const ProcessTable = ({ disableAutoRefresh = false }) => {
                 <td colSpan="9" className="text-center py-12">
                   <div className="flex flex-col items-center space-y-4">
                     <Monitor className="w-16 h-16 text-gray-600" />
-                    <span className="text-gray-400 text-lg">No processes found</span>
-                    <span className="text-gray-500 text-sm">Try adjusting your search criteria</span>
+                    <span className="text-gray-400 text-lg">
+                      No processes found
+                    </span>
+                    <span className="text-gray-500 text-sm">
+                      Try adjusting your search criteria
+                    </span>
                   </div>
                 </td>
               </tr>
             ) : (
-              filteredProcesses.slice(0, visibleProcessesCount).map((p, index) => (
-                <tr key={index} className="hover:bg-white/5 transition-all duration-200">
-                  <td className="px-6 py-4 text-sm text-white font-mono">{p.pid}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 rounded-lg bg-gray-800/50">
-                        <Activity className="w-4 h-4 text-cyan-400" />
+              filteredProcesses
+                .slice(0, visibleProcessesCount)
+                .map((p, index) => (
+                  <tr
+                    key={index}
+                    className="hover:bg-white/5 transition-all duration-200"
+                  >
+                    <td className="px-6 py-4 text-sm text-white font-mono">
+                      {p.pid}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="p-2 rounded-lg bg-gray-800/50">
+                          <Activity className="w-4 h-4 text-cyan-400" />
+                        </div>
+                        <span className="text-white font-medium">{p.comm}</span>
                       </div>
-                      <span className="text-white font-medium">{p.comm}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-12 bg-gray-700/30 rounded-full h-2">
-                        <div
-                          className="bg-cyan-400 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${Math.min(Number.parseFloat(p.cpu) || 0, 100)}%` }}
-                        />
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-12 bg-gray-700/30 rounded-full h-2">
+                          <div
+                            className="bg-cyan-400 h-2 rounded-full transition-all duration-300"
+                            style={{
+                              width: `${Math.min(
+                                Number.parseFloat(p.cpu) || 0,
+                                100
+                              )}%`,
+                            }}
+                          />
+                        </div>
+                        <span className="text-gray-300 text-sm font-mono">
+                          {p.cpu}%
+                        </span>
                       </div>
-                      <span className="text-gray-300 text-sm font-mono">{p.cpu}%</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-12 bg-gray-700/30 rounded-full h-2">
-                        <div
-                          className="bg-blue-400 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${Math.min(Number.parseFloat(p.mem) || 0, 100)}%` }}
-                        />
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-12 bg-gray-700/30 rounded-full h-2">
+                          <div
+                            className="bg-blue-400 h-2 rounded-full transition-all duration-300"
+                            style={{
+                              width: `${Math.min(
+                                Number.parseFloat(p.mem) || 0,
+                                100
+                              )}%`,
+                            }}
+                          />
+                        </div>
+                        <span className="text-gray-300 text-sm font-mono">
+                          {p.mem}%
+                        </span>
+                        {/* Show enhanced memory details if available */}
+                        {p.memoryDetails && p.memoryDetails.virtualSize > 0 && (
+                          <div className="text-xs text-gray-500 ml-2">
+                            ({p.memoryDetails.residentSize}MB)
+                          </div>
+                        )}
                       </div>
-                      <span className="text-gray-300 text-sm font-mono">{p.mem}%</span>
-                      {/* Show enhanced memory details if available */}
-                      {p.memoryDetails && p.memoryDetails.virtualSize > 0 && (
-                        <div className="text-xs text-gray-500 ml-2">({p.memoryDetails.residentSize}MB)</div>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-300">{p.user || "unknown"}</td>
-                  <td className="px-6 py-4 text-sm text-gray-300 font-mono">
-                    {p.etime && !p.etime.match(/^[a-zA-Z]+$/) ? p.etime : "00:00"}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div
-                      className={`inline-flex items-center space-x-2 px-3 py-1 text-xs font-medium rounded-full border ${getBadgeColor(p.severity)}`}
-                    >
-                      {getSeverityIcon(p.severity)}
-                      <span>{p.severity}</span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-gray-400 max-w-xs">
-                    <div className="flex items-center space-x-2">
-                      <span className={`font-mono ${expandedArgs.has(index) ? "" : "truncate"}`}>
-                        {expandedArgs.has(index)
-                          ? p.args
-                          : p.args && p.args.length > 50
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-300">
+                      {p.user || "unknown"}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-300 font-mono">
+                      {p.etime && !p.etime.match(/^[a-zA-Z]+$/)
+                        ? p.etime
+                        : "00:00"}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div
+                        className={`inline-flex items-center space-x-2 px-3 py-1 text-xs font-medium rounded-full border ${getBadgeColor(
+                          p.severity
+                        )}`}
+                      >
+                        {getSeverityIcon(p.severity)}
+                        <span>{p.severity}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-400 max-w-xs">
+                      <div className="flex items-center space-x-2">
+                        <span
+                          className={`font-mono ${
+                            expandedArgs.has(index) ? "" : "truncate"
+                          }`}
+                        >
+                          {expandedArgs.has(index)
+                            ? p.args
+                            : p.args && p.args.length > 50
                             ? `${p.args.substring(0, 50)}...`
                             : p.args || "N/A"}
-                      </span>
-                      {p.args && p.args.length > 50 && (
-                        <button
-                          onClick={() => toggleArgsExpansion(index)}
-                          className="p-1 rounded-lg hover:bg-gray-700/30 text-cyan-400 hover:text-cyan-300 transition-colors"
-                        >
-                          {expandedArgs.has(index) ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                        </button>
+                        </span>
+                        {p.args && p.args.length > 50 && (
+                          <button
+                            onClick={() => toggleArgsExpansion(index)}
+                            className="p-1 rounded-lg hover:bg-gray-700/30 text-cyan-400 hover:text-cyan-300 transition-colors"
+                          >
+                            {expandedArgs.has(index) ? (
+                              <EyeOff className="w-4 h-4" />
+                            ) : (
+                              <Eye className="w-4 h-4" />
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {p.severity !== "Low" && p.severity !== "Trusted" && (
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => trustProcess(p.comm, p.args)}
+                            className="inline-flex items-center space-x-1 px-3 py-1 bg-green-500/10 border border-green-500/20 text-green-400 rounded-lg text-xs hover:bg-green-500/20 transition-all duration-200"
+                          >
+                            <Shield className="w-3 h-3" />
+                            <span>Trust</span>
+                          </button>
+                          <button
+                            onClick={() => killProcess(p.pid)}
+                            className="inline-flex items-center space-x-1 px-3 py-1 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg text-xs hover:bg-red-500/20 transition-all duration-200"
+                          >
+                            <X className="w-3 h-3" />
+                            <span>Kill</span>
+                          </button>
+                        </div>
                       )}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    {p.severity !== "Low" && p.severity !== "Trusted" && (
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => trustProcess(p.comm, p.args)}
-                          className="inline-flex items-center space-x-1 px-3 py-1 bg-green-500/10 border border-green-500/20 text-green-400 rounded-lg text-xs hover:bg-green-500/20 transition-all duration-200"
-                        >
-                          <Shield className="w-3 h-3" />
-                          <span>Trust</span>
-                        </button>
-                        <button
-                          onClick={() => killProcess(p.pid)}
-                          className="inline-flex items-center space-x-1 px-3 py-1 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg text-xs hover:bg-red-500/20 transition-all duration-200"
-                        >
-                          <X className="w-3 h-3" />
-                          <span>Kill</span>
-                        </button>
-                      </div>
-                    )}
-                    {p.severity === "Trusted" && (
-                      <div className="flex items-center space-x-2">
-                        <Shield className="w-4 h-4 text-cyan-400" />
-                        <span className="text-gray-400 text-sm">Trusted</span>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))
+                      {p.severity === "Trusted" && (
+                        <div className="flex items-center space-x-2">
+                          <Shield className="w-4 h-4 text-cyan-400" />
+                          <span className="text-gray-400 text-sm">Trusted</span>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))
             )}
           </tbody>
         </table>
@@ -542,12 +631,13 @@ const ProcessTable = ({ disableAutoRefresh = false }) => {
             className="px-6 py-3 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 border border-cyan-400/30 rounded-xl text-cyan-400 hover:from-cyan-500/30 hover:to-blue-500/30 transition-all duration-300 backdrop-blur-sm"
             style={{ fontFamily: "Open Sans, sans-serif" }}
           >
-            Load More Processes ({filteredProcesses.length - visibleProcessesCount} remaining)
+            Load More Processes (
+            {filteredProcesses.length - visibleProcessesCount} remaining)
           </button>
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default ProcessTable
+export default ProcessTable;

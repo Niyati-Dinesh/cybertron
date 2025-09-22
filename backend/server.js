@@ -19,10 +19,12 @@ const authRoutes = require('./routes/auth');
 const scanRoutes = require('./routes/scan');
 const portScanRoutes = require('./routes/portScan');
 const hygieneRoutes = require('./routes/hygiene');
+const networkRoutes = require('./routes/network');
 app.use('/api/routes/ports', portScanRoutes);
 app.use('/api/routes/auth', authRoutes);
 app.use('/api/routes/scan', scanRoutes);
 app.use('/api/routes/hygiene', hygieneRoutes);
+app.use('/api/routes/network', networkRoutes);
 
 // Base route to test DB connection (as in your screenshot)
 app.get('/', async (req, res) => {

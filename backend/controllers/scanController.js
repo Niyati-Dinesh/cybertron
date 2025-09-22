@@ -295,9 +295,7 @@ exports.getProcesses = async (req, res) => {
   }
 };
 
-/**
- * Controller: Trust a process
- */
+//Controller: Trust a process
 exports.trustProcess = async (req, res) => {
   const { comm, args } = req.body;
   if (!comm) return res.status(400).json({ message: "Command name is required" });
@@ -321,9 +319,8 @@ exports.trustProcess = async (req, res) => {
   }
 };
 
-/**
- * Controller: Kill a process
- */
+//Controller: Kill a process
+ 
 exports.killProcess = async (req, res) => {
   const { pid } = req.body;
   if (!pid) return res.status(400).json({ message: "PID is required" });
@@ -359,9 +356,8 @@ exports.killProcess = async (req, res) => {
   });
 };
 
-/*
- * Controller: Get system info only
- */
+// Controller: Get system info only
+ 
 exports.getSystemInfo = async (req, res) => {
   try {
     const systemInfo = await getSystemInfo();

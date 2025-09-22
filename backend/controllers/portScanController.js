@@ -13,19 +13,18 @@ const HARDCODED_CVE_DB = JSON.parse(
   fs.readFileSync(path.join(__dirname, "hardcoded-cves.json"), "utf8")
 );
 
-// SECURITY: Function to validate the target input
+// SECURITY: Function to validate the target input : check if its correct IP address or domaain name
 const isValidTarget = (target) => {
   if (!target) return false;
   const targetRegex = /^((([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9-]*[A-Za-z0-9]))|((([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])(\/([0-9]|[1-2][0-9]|3[0-2]))?)$/;
   return targetRegex.test(target);
 };
-
-// Helper functions (parseNmapXmlToServices, correlateWithHardcoded, etc.)
-// ... (paste all the helper functions from the previous code here) ...
+// Helper to check if a text contains a keyword (case-insensitive)
 
 const matchesKeyword = (text = "", keyword) =>
   text && keyword && text.toLowerCase().includes(keyword.toLowerCase());
 
+//nmap provides results in XML FORMAT, this function parses that XML to a js object
 const parseNmapXmlToServices = async (xmlString) => {
   try {
     const parsed = await parseStringPromise(xmlString, { explicitArray: true, mergeAttrs: true });
@@ -55,6 +54,7 @@ const parseNmapXmlToServices = async (xmlString) => {
   }
 };
 
+//matches the nmap result with hardcoded CVE db
 const correlateWithHardcoded = (service) => {
   const matches = [];
   const serviceText = `${service.name} ${service.product} ${service.version} ${service.extra}`.trim();
@@ -77,6 +77,9 @@ const correlateWithHardcoded = (service) => {
   return matches;
 };
 
+//If match not founf in hardcoded CVE , query NVD API
+// NVD API docs: https://nvd.nist.gov/developers/vulnerabilities
+// Note: NVD has rate limits - 5 requests in a rolling 30 second window for free tier
 const queryNvdForService = async (service) => {
   try {
     const apiKey = process.env.NVD_API_KEY || "";
@@ -101,7 +104,7 @@ const queryNvdForService = async (service) => {
 };
 
 
-// --- EXPORTED CONTROLLER FUNCTIONS ---
+// Main controller functions
 
 exports.scanAndCorrelate = async (req, res) => {
   const outputFile = path.join(__dirname, "..", "tmp", `nmap_scan_${Date.now()}.xml`);
@@ -142,6 +145,8 @@ exports.scanAndCorrelate = async (req, res) => {
   }
 };
 
+// Scan only endpoint - performs nmap scan and returns services without correlation
+
 exports.scanOnly = async (req, res) => {
     const outputFile = path.join(__dirname, "..", "tmp", `nmap_scan_${Date.now()}.xml`);
     try {
@@ -168,6 +173,7 @@ exports.scanOnly = async (req, res) => {
     }
 };
 
+// Correlate only endpoint - accepts services in request body and returns correlated vulnerabilities
 exports.correlateServices = async (req, res) => {
     try {
         const services = req.body.services || [];

@@ -4,9 +4,7 @@ import GalaxyBg from "./components/GalaxyBg";
 export default function App() {
   return (
     <>
-     
-      <GalaxyBg>
-    </GalaxyBg>
+      <GalaxyBg></GalaxyBg>
     </>
   );
 }

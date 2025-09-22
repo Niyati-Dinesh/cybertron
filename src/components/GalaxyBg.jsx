@@ -33,7 +33,7 @@ const GalaxyBg = () => {
 
   useEffect(() => {
     setIsAuthenticated(checkAuth());
-    
+
     const handleAuthChange = () => {
       const authStatus = checkAuth();
       setIsAuthenticated(authStatus);
@@ -41,23 +41,23 @@ const GalaxyBg = () => {
     };
 
     window.addEventListener("authChange", handleAuthChange);
-    
+
     // Update height initially and on resize/scroll
     updateDocumentHeight();
-    
+
     const handleResize = () => updateDocumentHeight();
     const handleScroll = () => updateDocumentHeight();
-    
+
     window.addEventListener("resize", handleResize);
     window.addEventListener("scroll", handleScroll);
-    
+
     // Use MutationObserver to detect DOM changes
     const observer = new MutationObserver(updateDocumentHeight);
     observer.observe(document.body, {
       childList: true,
       subtree: true,
       attributes: true,
-      attributeFilter: ['style', 'class']
+      attributeFilter: ["style", "class"],
     });
 
     return () => {
@@ -79,7 +79,7 @@ const GalaxyBg = () => {
   const generateStars = () => {
     const stars = [];
     const starCount = Math.max(60, Math.floor(documentHeight / 20)); // More stars for taller content
-    
+
     for (let i = 0; i < starCount; i++) {
       stars.push(
         <span
@@ -100,13 +100,13 @@ const GalaxyBg = () => {
   return (
     <div className="bg-black min-h-screen">
       {/* Stars Container - Fixed positioning covers entire document */}
-      <div 
+      <div
         className="fixed top-0 left-0 w-full pointer-events-none z-0"
         style={{ height: `${documentHeight}px` }}
       >
         {generateStars()}
       </div>
-      
+
       <div className="relative z-10">
         <NavBar key={authKey} />
         <div className="pt-20 min-h-screen bg-transparent">

@@ -49,7 +49,7 @@ exports.login = async (req, res) => {
   const { email, password } = req.body;
 
   try {
-    // Use prisma.users.findUnique() to match your "Users" table
+    // Use prisma.users.findUnique() to match email
     const user = await dbModel.findUnique({ where: { email } });
     if (!user) {
       return res.status(400).json({ message: "Email not registered" });
@@ -58,7 +58,7 @@ exports.login = async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
-    // Use the `id` for the token since your schema doesn't have `uid`
+  
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, {
       expiresIn: "3h",
     });

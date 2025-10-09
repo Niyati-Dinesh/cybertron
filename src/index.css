@@ -14,7 +14,7 @@ html, body {
 /* Full-screen galaxy background that expands with content */
 body {
   position: relative;
-  background: radial-gradient(ellipse at center, #0a0e2a 0%, #000000 70%);
+  background: radial-gradient(ellipse at center, #0a0e2a 0%, #000000 100%);
   font-family: 'Sora', sans-serif;
   color: white;
   /* Remove min-height constraint to allow natural expansion */

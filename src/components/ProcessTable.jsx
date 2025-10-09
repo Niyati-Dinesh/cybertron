@@ -17,6 +17,7 @@ import {
   Server,
   Gauge,
 } from "lucide-react";
+import { Toaster, toast } from "react-hot-toast";
 import { useContext, useEffect, useState } from "react";
 import { ScanContext } from "../context/ScanContext";
 import axios from "axios";
@@ -101,27 +102,57 @@ const ProcessTable = ({ disableAutoRefresh = false }) => {
       );
       // Silent refresh after trust action
       backgroundFetchProcesses();
+      toast.success(`Process "${comm}" has been trusted.`);
     } catch (err) {
-      alert("Failed to trust process.");
+      toast.error("Failed to trust process.");
       console.error("Trust process error:", err.response?.data || err.message);
     }
   };
 
-  const killProcess = async (pid) => {
-    const token = sessionStorage.getItem("token");
-    try {
-      await axios.post(
-        "http://localhost:5000/api/routes/scan/kill-process",
-        { pid },
-        { headers: { authtoken: token } }
-      );
-      // Silent refresh after kill action
+const killProcess = async (pid) => {
+  const token = sessionStorage.getItem("token");
+  
+  // Show loading toast
+  const loadingToast = toast.loading(`Attempting to kill process ${pid}...`);
+  
+  try {
+    const response = await axios.post(
+      "http://localhost:5000/api/routes/scan/kill-process",
+      { pid },
+      { headers: { authtoken: token } }
+    );
+    
+    // Dismiss loading toast
+    toast.dismiss(loadingToast);
+    
+    if (response.data.success) {
+      // Success case
       backgroundFetchProcesses();
-    } catch (err) {
-      alert(`Failed to kill process ${pid}.`);
-      console.error("Kill process error:", err.response?.data || err.message);
+      toast.success(response.data.message || `Process ${pid} has been successfully terminated.`);
+    } else {
+      // Backend returned success: false
+      const errorMessage = response.data.message || `Failed to kill process ${pid}`;
+      toast.error(errorMessage);
     }
-  };
+  } catch (err) {
+    // Dismiss loading toast
+    toast.dismiss(loadingToast);
+    
+    // Handle different error types from backend
+    const errorData = err.response?.data;
+    if (errorData) {
+      // Use backend error message
+      toast.error(errorData.message || `Failed to kill process ${pid}`);
+      
+      // Log additional details for debugging
+      console.warn(`Kill process error:`, errorData);
+    } else {
+      // Network or other errors
+      toast.error(`Failed to kill process ${pid}. Please check your connection.`);
+      console.error("Kill process network error:", err.message);
+    }
+  }
+};
 
   const getBadgeColor = (severity) => {
     switch (severity) {
@@ -185,7 +216,43 @@ const ProcessTable = ({ disableAutoRefresh = false }) => {
   const processCount = getProcessCountBySeverity();
 
   return (
-    <div className="border border-gray-700/30 rounded-2xl p-6 shadow-2xlbackdrop-blur-sm">
+    <div className="border border-gray-700/30 rounded-2xl p-6 shadow-2xl backdrop-blur-sm">
+      {/* React Hot Toaster - Add this at the top of your component */}
+      <Toaster
+        position="top-right"
+        reverseOrder={false}
+        toastOptions={{
+          duration: 5000,
+          style: {
+            background: '#1f2937',
+            color: '#fff',
+            border: '1px solid #374151',
+            borderRadius: '12px',
+            backdropFilter: 'blur(8px)',
+          },
+          success: {
+            style: {
+              background: '#065f46',
+              border: '1px solid #047857',
+            },
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#fff',
+            },
+          },
+          error: {
+            style: {
+              background: '#7f1d1d',
+              border: '1px solid #dc2626',
+            },
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
+
       {/* Header */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6">
         <div className="flex items-center space-x-4">

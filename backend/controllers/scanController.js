@@ -320,44 +320,187 @@ exports.trustProcess = async (req, res) => {
 };
 
 //Controller: Kill a process
- 
+// Controller: Kill a process
 exports.killProcess = async (req, res) => {
   const { pid } = req.body;
-  if (!pid) return res.status(400).json({ message: "PID is required" });
+  if (!pid) return res.status(400).json({ 
+    success: false,
+    message: "PID is required" 
+  });
 
   const pidNum = parseInt(pid);
   if (isNaN(pidNum) || pidNum <= 0)
-    return res.status(400).json({ message: "Invalid PID" });
+    return res.status(400).json({ 
+      success: false,
+      message: "Invalid PID" 
+    });
 
-  const criticalPids = [1, 2]; // Protect init/kthreadd
+  // Extended list of critical PIDs that should not be killed
+  const criticalPids = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]; // Kernel and system processes
   if (criticalPids.includes(pidNum))
-    return res
-      .status(403)
-      .json({ message: "Cannot kill critical system process" });
+    return res.status(403).json({ 
+      success: false,
+      message: "Cannot kill critical system process",
+      type: "critical"
+    });
 
-  const command =
-    os.platform() === "win32"
-      ? `taskkill /PID ${pidNum} /F`
-      : `kill ${pidNum}`;
+  const platform = os.platform();
+  
+  try {
+    // First, verify the process exists and get its details
+    let processExists = false;
+    let processName = "";
+    
+    if (platform === "win32") {
+      try {
+        const { stdout } = await execAsync(`tasklist /FI "PID eq ${pidNum}" /FO CSV /NH`);
+        processExists = stdout.trim().length > 0;
+        if (processExists) {
+          const match = stdout.match(/"([^"]+)"/);
+          processName = match ? match[1] : "Unknown";
+        }
+      } catch (error) {
+        processExists = false;
+      }
+    } else {
+      try {
+        const { stdout } = await execAsync(`ps -p ${pidNum} -o comm=`);
+        processExists = stdout.trim().length > 0;
+        processName = stdout.trim() || "Unknown";
+      } catch (error) {
+        processExists = false;
+      }
+    }
 
-  exec(command, (error, stdout, stderr) => {
-    if (error) {
-      console.error(`exec error: ${error}`);
-      return res.status(500).json({
-        message: `Failed to kill process with PID ${pidNum}`,
-        error: error.message,
+    if (!processExists) {
+      return res.status(404).json({ 
+        success: false,
+        message: `Process ${pidNum} not found or already terminated`,
+        type: "not_found"
       });
     }
-    if (stderr) console.error(`stderr: ${stderr}`);
 
-    res
-      .status(200)
-      .json({ message: `Process with PID ${pidNum} has been terminated.`, pid: pidNum });
-  });
+    // Check if it's a system process (additional protection)
+    const systemProcessNames = ['systemd', 'init', 'kthreadd', 'ksoftirqd', 'rcu_sched', 'migration', 'watchdog'];
+    if (systemProcessNames.some(name => processName.toLowerCase().includes(name))) {
+      return res.status(403).json({
+        success: false,
+        message: `Cannot kill system process: ${processName}`,
+        type: "system_process"
+      });
+    }
+
+    // Now try to kill the process
+    const killCommand = platform === "win32"
+      ? `taskkill /PID ${pidNum} /F /T`
+      : `kill -9 ${pidNum}`;
+
+    console.log(`Attempting to kill process ${pidNum} (${processName}) with command: ${killCommand}`);
+    
+    const { stdout, stderr } = await execAsync(killCommand);
+    console.log(`Kill command output for PID ${pidNum}:`, { stdout, stderr });
+
+    // Wait a moment for the process to terminate
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    // Verify the process was actually killed
+    let processStillExists = false;
+    if (platform === "win32") {
+      try {
+        const { stdout: verifyOutput } = await execAsync(`tasklist /FI "PID eq ${pidNum}" /FO CSV /NH`);
+        processStillExists = verifyOutput.trim().length > 0;
+      } catch (error) {
+        processStillExists = false;
+      }
+    } else {
+      try {
+        const { stdout: verifyOutput } = await execAsync(`ps -p ${pidNum} -o pid=`);
+        processStillExists = verifyOutput.trim().length > 0;
+      } catch (error) {
+        processStillExists = false;
+      }
+    }
+
+    if (processStillExists) {
+      // Process still exists - try a more forceful method on Linux
+      if (platform !== "win32") {
+        try {
+          console.log(`Process still exists, trying SIGKILL directly...`);
+          await execAsync(`kill -SIGKILL ${pidNum}`);
+          await new Promise(resolve => setTimeout(resolve, 300));
+          
+          // Check again
+          try {
+            const { stdout: finalCheck } = await execAsync(`ps -p ${pidNum} -o pid=`);
+            if (finalCheck.trim().length > 0) {
+              return res.status(403).json({
+                success: false,
+                message: `Process ${pidNum} (${processName}) could not be terminated. It may be a protected system process.`,
+                type: "protected_process"
+              });
+            }
+          } catch (error) {
+            // Process is finally gone
+          }
+        } catch (forceError) {
+          return res.status(403).json({
+            success: false,
+            message: `Process ${pidNum} (${processName}) is protected and cannot be killed.`,
+            type: "protected_process"
+          });
+        }
+      } else {
+        return res.status(403).json({
+          success: false,
+          message: `Process ${pidNum} (${processName}) could not be terminated. It may be a protected system process.`,
+          type: "protected_process"
+        });
+      }
+    }
+
+    // Success!
+    console.log(`Successfully killed process ${pidNum} (${processName})`);
+    res.status(200).json({ 
+      success: true,
+      message: `Process ${pidNum} (${processName}) has been successfully terminated.`, 
+      pid: pidNum,
+      processName: processName
+    });
+
+  } catch (error) {
+    console.error(`Error killing process ${pidNum}:`, error);
+    
+    // Parse error message for specific cases
+    const errorMsg = error.message.toLowerCase();
+    
+    if (errorMsg.includes("permission denied") || errorMsg.includes("access denied")) {
+      return res.status(403).json({
+        success: false,
+        message: `Permission denied. Cannot kill process ${pidNum}. Try running with administrator privileges.`,
+        type: "permission_denied",
+        error: error.message
+      });
+    }
+    
+    if (errorMsg.includes("no such process") || errorMsg.includes("not found")) {
+      return res.status(404).json({
+        success: false,
+        message: `Process ${pidNum} not found or already terminated`,
+        type: "not_found",
+        error: error.message
+      });
+    }
+
+    // Generic error
+    res.status(500).json({
+      success: false,
+      message: `Failed to kill process ${pidNum}: ${error.message}`,
+      type: "error",
+      error: error.message
+    });
+  }
 };
-
 // Controller: Get system info only
- 
 exports.getSystemInfo = async (req, res) => {
   try {
     const systemInfo = await getSystemInfo();

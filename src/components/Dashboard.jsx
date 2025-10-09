@@ -14,6 +14,11 @@ import {
   BarChart,
   Cpu,
   Lock,
+  Users,
+  Server,
+  Eye,
+  FileText,
+  Scan
 } from "lucide-react";
 import { ScanContext } from "../context/ScanContext";
 import ProcessTable from "./ProcessTable";
@@ -34,7 +39,7 @@ const Dashboard = () => {
 
   const [currentTime, setCurrentTime] = useState(new Date());
   const [hasInitialScan, setHasInitialScan] = useState(
-    sessionStorage.getItem("hasInitialScan") === "true" // persist across refresh
+    sessionStorage.getItem("hasInitialScan") === "true"
   );
   const [shouldStartPortScanning, setShouldStartPortScanning] = useState(false);
   const [isRefreshingAllModules, setIsRefreshingAllModules] = useState(false);
@@ -54,7 +59,6 @@ const Dashboard = () => {
   }, [processData, hasInitialScan]);
 
   const handleInitialScan = async () => {
-    // Start all modules scanning
     await fetchProcesses(true);
     setShouldStartPortScanning(true);
   };
@@ -62,24 +66,14 @@ const Dashboard = () => {
   const handleRefreshAllModules = async () => {
     setIsRefreshingAllModules(true);
     try {
-      // Refresh processes manually (this will show loading state)
       await fetchProcesses(true);
-      // Trigger port scanner refresh
-      setShouldStartPortScanning((prev) => !prev); // Toggle to trigger refresh
+      setShouldStartPortScanning((prev) => !prev);
     } finally {
       setIsRefreshingAllModules(false);
     }
   };
 
   const systemStats = getSystemStats();
-
-  const formatUptime = (seconds) => {
-    if (!seconds || seconds <= 0) return null;
-    const days = Math.floor(seconds / 86400);
-    const hours = Math.floor((seconds % 86400) / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    return `${days}d ${hours}h ${minutes}m`;
-  };
 
   const formatMemory = (bytes) => {
     if (!bytes) return null;
@@ -90,128 +84,195 @@ const Dashboard = () => {
   const getOSDisplayName = () => {
     if (!systemInfo) return "System";
     if (systemInfo.platform === "linux") {
-      if (systemInfo.osRelease?.toLowerCase().includes("kali"))
-        return "Kali Linux";
-      if (systemInfo.version?.toLowerCase().includes("ubuntu"))
-        return "Ubuntu Linux";
-      if (systemInfo.version?.toLowerCase().includes("debian"))
-        return "Debian Linux";
-      if (systemInfo.version?.toLowerCase().includes("fedora"))
-        return "Fedora Linux";
-      if (systemInfo.version?.toLowerCase().includes("centos"))
-        return "CentOS Linux";
-      if (systemInfo.version?.toLowerCase().includes("arch"))
-        return "Arch Linux";
+      if (systemInfo.osRelease?.toLowerCase().includes("kali")) return "Kali Linux";
+      if (systemInfo.version?.toLowerCase().includes("ubuntu")) return "Ubuntu Linux";
+      if (systemInfo.version?.toLowerCase().includes("debian")) return "Debian Linux";
       return "Linux";
     }
     return systemInfo.platform
-      ? `${systemInfo.platform
-          .charAt(0)
-          .toUpperCase()}${systemInfo.platform.slice(1)}`
+      ? `${systemInfo.platform.charAt(0).toUpperCase()}${systemInfo.platform.slice(1)}`
       : "System";
   };
 
-  const getOSVersion = () => {
-    if (!systemInfo) return "";
-    if (systemInfo.osRelease?.includes('VERSION="')) {
-      const versionMatch = systemInfo.osRelease.match(/VERSION="([^"]+)"/);
-      if (versionMatch) return versionMatch[1];
-    }
-    return systemInfo.release || "";
-  };
-
-  // --- START MONITORING PAGE (before first scan) ---
+  // --- ENHANCED START MONITORING PAGE ---
   if (!hasInitialScan) {
     return (
-      <div className="flex items-center justify-center min-h-screen ">
-        <div
-          className="min-h-screen pt-20 pb-8 px-6 bg-transparent "
-          style={{ fontFamily: "Open Sans, sans-serif" }}
-        >
-          <h1 className="text-4xl font-bold text-white mb-6 align-center items-center font-libertinus">
-            Welcome to Security Dashboard
-          </h1>
-          <p className="text-gray-400 text-lg max-w-2xl mb-10">
-            Your system's first line of defense. Start monitoring now to analyze
-            running processes, detect potential threats, and keep your machine
-            safe in real time.
-          </p>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900">
+        <div className="min-h-screen pt-20 pb-8 px-6 w-full max-w-6xl mx-auto">
+          {/* Header Section */}
+          <div className="text-center mb-16">
+            <div className="flex items-center justify-center mb-6">
+              <div className="relative">
+                <div className="absolute inset-0 bg-cyan-500 rounded-full blur-xl opacity-20 animate-pulse"></div>
+                <Shield className="w-16 h-16 text-cyan-400 relative z-10" />
+              </div>
+            </div>
+            <h1 className="text-5xl font-bold text-white mb-6 font-serif bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+              Security Dashboard
+            </h1>
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+              Comprehensive security monitoring platform designed to protect your system 
+              with real-time threat detection and advanced analytics.
+            </p>
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 w-full max-w-4xl">
-            <div className=" border border-white/10 p-6 rounded font-sans">
-              <Cpu className="w-10 h-10 text-cyan-400 mb-4 mx-auto" />
-              <h3 className="text-white font-semibold mb-2">
-                Process Scanning
-              </h3>
+          {/* Stats Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 text-center hover:bg-white/8 transition-all duration-300 group">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-cyan-500/10 rounded-xl mb-4 group-hover:scale-110 transition-transform">
+                <Server className="w-6 h-6 text-cyan-400" />
+              </div>
+              <h3 className="text-white font-semibold text-lg mb-2">System Health</h3>
               <p className="text-gray-400 text-sm">
-                Identify suspicious processes and stop them instantly.
+                Monitor CPU, memory, and process performance in real-time
               </p>
             </div>
-            <div className="border border-white/10 p-6 rounded font-sans">
-              <BarChart className="w-10 h-10 text-green-400 mb-4 mx-auto" />
-              <h3 className="text-white font-semibold mb-2">
-                Resource Insights
-              </h3>
+
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 text-center hover:bg-white/8 transition-all duration-300 group">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-green-500/10 rounded-xl mb-4 group-hover:scale-110 transition-transform">
+                <Network className="w-6 h-6 text-green-400" />
+              </div>
+              <h3 className="text-white font-semibold text-lg mb-2">Network Security</h3>
               <p className="text-gray-400 text-sm">
-                Track CPU, memory, and system load in real time.
+                Scan ports and detect unauthorized network activities
               </p>
             </div>
-            <div className="border border-white/10 p-6 rounded font-sans">
-              <Lock className="w-10 h-10 text-purple-400 mb-4 mx-auto" />
-              <h3 className="text-white font-semibold mb-2">
-                Network Awareness
-              </h3>
+
+            <div className="bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6 text-center hover:bg-white/8 transition-all duration-300 group">
+              <div className="inline-flex items-center justify-center w-12 h-12 bg-purple-500/10 rounded-xl mb-4 group-hover:scale-110 transition-transform">
+                <AlertTriangle className="w-6 h-6 text-purple-400" />
+              </div>
+              <h3 className="text-white font-semibold text-lg mb-2">Threat Detection</h3>
               <p className="text-gray-400 text-sm">
-                Monitor ports and detect unauthorized devices on your LAN.
+                Identify suspicious processes and potential security risks
               </p>
             </div>
           </div>
 
-          <button
-            onClick={handleInitialScan}
-            disabled={loading || backgroundLoading}
-            className={`cursor-pointer px-12 py-6 rounded font-bold text-2xl transition-all duration-500 transform border-2 ${
-              loading || backgroundLoading
-                ? "bg-gray-600/20 text-gray-400 cursor-not-allowed border-gray-500/20"
-                : "bg-transparent text-white border-white/30 hover:border-white hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:scale-105"
-            }`}
-          >
-            {loading || backgroundLoading ? (
-              <div className="flex items-center space-x-4 font-sans">
-                <RefreshCw className="w-8 h-8 animate-spin" />
-                <span>Initializing Security Modules...</span>
+          {/* Features Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-white mb-6 font-serif">What You'll Monitor</h2>
+              
+              <div className="space-y-4">
+                {[
+                  { icon: Activity, text: "Real-time process monitoring and analysis", color: "cyan" },
+                  { icon: Eye, text: "Suspicious activity detection and alerts", color: "red" },
+                  { icon: Network, text: "Open port scanning and network mapping", color: "green" },
+                  { icon: Users, text: "Device discovery and tracking", color: "blue" },
+                  { icon: FileText, text: "File integrity and permission checks", color: "purple" },
+                  { icon: HardDrive, text: "System resource utilization tracking", color: "orange" },
+                ].map((feature, index) => (
+                  <div key={index} className="flex items-center space-x-4 group">
+                    <div className={`flex-shrink-0 w-10 h-10 bg-${feature.color}-500/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                      <feature.icon className={`w-5 h-5 text-${feature.color}-400`} />
+                    </div>
+                    <span className="text-gray-300 group-hover:text-white transition-colors">
+                      {feature.text}
+                    </span>
+                  </div>
+                ))}
               </div>
-            ) : (
-              <div className="flex items-center space-x-4 font-sana">
-                <Zap className="w-8 h-8" />
-                <span>Scan Now</span>
+            </div>
+
+            <div className="space-y-6">
+              <h2 className="text-2xl font-bold text-white mb-6 font-serif">Security Benefits</h2>
+              
+              <div className="space-y-4">
+                {[
+                  "Threat detection and prevention",
+                  "Comprehensive system visibility",
+                  "Real-time security alerts",
+                  "Network vulnerability assessment",
+                  "Process behavior analysis",
+                  "Automated security reporting"
+                  
+                ].map((benefit, index) => (
+                  <div key={index} className="flex items-center space-x-3">
+                    <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0" />
+                    <span className="text-gray-300">{benefit}</span>
+                  </div>
+                ))}
               </div>
-            )}
-          </button>
+            </div>
+          </div>
+
+          {/* System Info & Scan Button */}
+          <div className="bg-gradient-to-r from-cyan-500/10 to-blue-500/10 backdrop-blur-sm border border-cyan-500/20 rounded-2xl p-8 text-center">
+            <div className="max-w-2xl mx-auto">
+              <div className="flex items-center justify-center space-x-3 mb-6">
+                <Scan className="w-8 h-8 text-cyan-400" />
+                <h3 className="text-2xl font-bold text-white font-serif">Ready to Secure Your System</h3>
+              </div>
+              
+              <p className="text-gray-300 mb-8 text-lg leading-relaxed">
+                Initial scan will analyze your system processes, network configuration, 
+                and security posture to establish baseline monitoring.
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8 text-sm">
+                <div className="text-left bg-black/20 rounded-lg p-4">
+                  <h4 className="text-cyan-400 font-semibold mb-2">Scan Includes:</h4>
+                  <ul className="text-gray-300 space-y-1">
+                    <li>• Process inventory & analysis</li>
+                    <li>• Network port scanning</li>
+                    <li>• System resource audit</li>
+                    
+                  </ul>
+                </div>
+                <div className="text-left bg-black/20 rounded-lg p-4">
+                  <h4 className="text-green-400 font-semibold mb-2">Estimated Time:</h4>
+                  <ul className="text-gray-300 space-y-1">
+                    <li>• Initial scan: 15-30 seconds</li>
+                    <li>• Real-time updates: Continuous</li>
+                    <li>• Threat analysis: Instant</li>
+                  </ul>
+                </div>
+              </div>
+
+              <button
+                onClick={handleInitialScan}
+                disabled={loading || backgroundLoading}
+                className={`relative px-16 py-6 rounded-2xl font-bold text-xl transition-all duration-500 transform border-2 ${
+                  loading || backgroundLoading
+                    ? "bg-gray-600/20 text-gray-400 cursor-not-allowed border-gray-500/20"
+                    : "bg-gradient-to-r from-cyan-500 to-blue-500 text-white border-transparent hover:shadow-[0_0_40px_rgba(34,211,238,0.5)] hover:scale-105"
+                }`}
+              >
+                {loading || backgroundLoading ? (
+                  <div className="flex items-center justify-center space-x-4">
+                    <RefreshCw className="w-6 h-6 animate-spin" />
+                    <span>Initializing Security Scan...</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center space-x-4">
+                    <Zap className="w-6 h-6" />
+                    <span>Start Security Scan</span>
+                  </div>
+                )}
+              </button>
+
+              <p className="text-gray-400 text-sm mt-4">
+                This action will start monitoring your system in real-time
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
-  // --- AFTER INITIAL SCAN (normal dashboard) ---
+  // --- NORMAL DASHBOARD (after initial scan) ---
   return (
-    <div
-      className="min-h-screen pt-20 pb-8 px-6 bg-transparent"
-      style={{ fontFamily: "Open Sans, sans-serif" }}
-    >
+    <div className="min-h-screen pt-20 pb-8 px-6 bg-transparent" style={{ fontFamily: "Open Sans, sans-serif" }}>
       <div className="max-w-6xl mx-auto">
+        {/* ... rest of your existing dashboard code ... */}
         <div className="mb-16">
-          {/* Main heading section */}
           <div className="flex flex-col lg:flex-row items-center justify-between gap-12 mb-16">
-            {/* Left side - System info */}
             <div className="flex-1 text-center lg:text-left">
-              <h1
-                className="text-3xl md:text-4xl font-bold text-white mb-6 tracking-tight"
-                style={{ fontFamily: "Libertinus Sans, serif" }}
-              >
+              <h1 className="text-3xl md:text-4xl font-bold text-white mb-6 tracking-tight" style={{ fontFamily: "Libertinus Sans, serif" }}>
                 {getOSDisplayName()}
               </h1>
-
               <div className="space-y-3 text-lg text-gray-300">
                 {systemInfo && (
                   <>
@@ -219,21 +280,13 @@ const Dashboard = () => {
                       <Monitor className="w-5 h-5 text-cyan-400" />
                       <span>{systemInfo.arch} architecture</span>
                     </div>
-                    {getOSVersion() && (
-                      <div className="flex items-center justify-center lg:justify-start space-x-2">
-                        <Shield className="w-5 h-5 text-cyan-400" />
-                        <span>Version {getOSVersion()}</span>
-                      </div>
-                    )}
-                    {systemStats?.memoryUsage && (
-                      <div className="flex items-center justify-center lg:justify-start space-x-2">
-                        <HardDrive className="w-5 h-5 text-purple-400" />
-                        <span>
-                          {systemStats.memoryUsage}% memory used (
-                          {formatMemory(systemInfo.totalMemory)} total)
-                        </span>
-                      </div>
-                    )}
+                    <div className="flex items-center justify-center lg:justify-start space-x-2">
+                      <HardDrive className="w-5 h-5 text-purple-400" />
+                      <span>
+                        {systemStats?.memoryUsage}% memory used (
+                        {formatMemory(systemInfo.totalMemory)} total)
+                      </span>
+                    </div>
                   </>
                 )}
                 <div className="flex items-center justify-center lg:justify-start space-x-2">
@@ -243,9 +296,7 @@ const Dashboard = () => {
                 {scanTimestamp && (
                   <div className="flex items-center justify-center lg:justify-start space-x-2">
                     <CheckCircle className="w-5 h-5 text-green-400" />
-                    <span>
-                      Last scan: {new Date(scanTimestamp).toLocaleTimeString()}
-                    </span>
+                    <span>Last scan: {new Date(scanTimestamp).toLocaleTimeString()}</span>
                   </div>
                 )}
                 {!backgroundLoading && (
@@ -257,15 +308,12 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {/* Right side - Floating Scan Button */}
             <div className="flex-shrink-0">
               {(loading || isRefreshingAllModules) && (
                 <div className="flex items-center justify-center mb-4">
                   <div className="flex items-center space-x-2 px-4 py-2 bg-cyan-400/10 border border-cyan-400/20 rounded-lg">
                     <RefreshCw className="w-4 h-4 animate-spin text-cyan-400" />
-                    <span className="text-cyan-400 text-sm font-medium">
-                      Refreshing All Modules
-                    </span>
+                    <span className="text-cyan-400 text-sm font-medium">Refreshing All Modules</span>
                   </div>
                 </div>
               )}
@@ -300,82 +348,47 @@ const Dashboard = () => {
         {/* Security Modules */}
         <div className="mb-16">
           <div className="text-center mb-12">
-            <h2
-              className="text-3xl font-bold text-white mb-4"
-              style={{ fontFamily: "Libertinus Sans, serif" }}
-            >
+            <h2 className="text-3xl font-bold text-white mb-4" style={{ fontFamily: "Libertinus Sans, serif" }}>
               Security Modules
             </h2>
-            <p className="text-gray-400 text-lg">
-              Active monitoring and analysis tools
-            </p>
+            <p className="text-gray-400 text-lg">Active monitoring and analysis tools</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Process Monitor - Active */}
             <div className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-sm text-center hover:bg-white/8 transition-all duration-300">
               <div className="p-3 rounded-xl bg-cyan-400/10 border border-cyan-400/20 inline-flex mb-4">
                 <Activity className="w-8 h-8 text-cyan-400" />
               </div>
-              <h3 className="text-white font-semibold text-lg mb-2">
-                Process Monitor
-              </h3>
-              <p className="text-gray-400 text-sm mb-4 leading-relaxed">
-                Real-time process analysis and threat detection
-              </p>
+              <h3 className="text-white font-semibold text-lg mb-2">Process Monitor</h3>
+              <p className="text-gray-400 text-sm mb-4 leading-relaxed">Real-time process analysis and threat detection</p>
               <div className="flex items-center justify-center space-x-2">
                 <CheckCircle className="w-4 h-4 text-green-400" />
-                <span className="text-green-400 text-sm font-medium">
-                  Active
-                </span>
+                <span className="text-green-400 text-sm font-medium">Active</span>
               </div>
             </div>
 
-            {/* Port Scanner - Active */}
             <div className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-sm text-center hover:bg-white/8 transition-all duration-300">
               <div className="p-3 rounded-xl bg-cyan-400/10 border border-cyan-400/20 inline-flex mb-4">
                 <Network className="w-8 h-8 text-cyan-400" />
               </div>
-              <h3 className="text-white font-semibold text-lg mb-2">
-                Port Scanner
-              </h3>
-              <p className="text-gray-400 text-sm mb-4 leading-relaxed">
-                Network port analysis and vulnerability detection
-              </p>
+              <h3 className="text-white font-semibold text-lg mb-2">Port Scanner</h3>
+              <p className="text-gray-400 text-sm mb-4 leading-relaxed">Network port analysis and vulnerability detection</p>
               <div className="flex items-center justify-center space-x-2">
                 <CheckCircle className="w-4 h-4 text-green-400" />
-                <span className="text-green-400 text-sm font-medium">
-                  Active
-                </span>
+                <span className="text-green-400 text-sm font-medium">Active</span>
               </div>
             </div>
 
-            {/* Other modules - Coming Soon */}
             {[
-              {
-                icon: Wifi,
-                title: "Device Discovery",
-                desc: "Network device mapping and identification",
-              },
-              {
-                icon: AlertTriangle,
-                title: "Threat Analysis",
-                desc: "Advanced security assessment and reporting",
-              },
+              { icon: Wifi, title: "Device Discovery", desc: "Network device mapping and identification" },
+              { icon: AlertTriangle, title: "Threat Analysis", desc: "Advanced security assessment and reporting" },
             ].map((module, index) => (
-              <div
-                key={index}
-                className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-sm text-center opacity-60"
-              >
+              <div key={index} className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-sm text-center opacity-60">
                 <div className="p-3 rounded-xl bg-gray-500/10 border border-gray-500/20 inline-flex mb-4">
                   <module.icon className="w-8 h-8 text-gray-400" />
                 </div>
-                <h3 className="text-white font-semibold text-lg mb-2">
-                  {module.title}
-                </h3>
-                <p className="text-gray-400 text-sm mb-4 leading-relaxed">
-                  {module.desc}
-                </p>
+                <h3 className="text-white font-semibold text-lg mb-2">{module.title}</h3>
+                <p className="text-gray-400 text-sm mb-4 leading-relaxed">{module.desc}</p>
                 <div className="flex items-center justify-center space-x-2">
                   <Clock className="w-4 h-4 text-gray-400" />
                   <span className="text-gray-400 text-sm">Coming Soon</span>
@@ -389,7 +402,7 @@ const Dashboard = () => {
           <ProcessTable disableAutoRefresh={false} />
         </div>
 
-        <div className="space-y-8 bg-transparent backdrop-blur-sm">
+        <div className="space-y-8 bg-transparent backdrop-blur-sm mt-5">
           <PortScannerPanel
             shouldAutoStart={shouldStartPortScanning}
             refreshTrigger={isRefreshingAllModules}

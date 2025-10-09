@@ -70,7 +70,7 @@ export default function AuthComponent() {
 
         toast.success(
           isLogin ? "Login successful!" : "Registration successful!"
-        );
+        , { duration: 3000 });
         navigate("/success");
       }
     } catch (error) {

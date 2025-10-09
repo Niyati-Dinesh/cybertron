@@ -68,10 +68,7 @@ export default function AuthComponent() {
         // Trigger navbar update
         window.dispatchEvent(new CustomEvent("authChange"));
 
-        toast.success(
-          isLogin ? "Login successful!" : "Registration successful!"
-        , { duration: 3000 });
-        navigate("/success");
+       
       }
     } catch (error) {
       let errorMessage = "Something went wrong. Please try again.";

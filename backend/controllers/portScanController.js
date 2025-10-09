@@ -145,33 +145,7 @@ exports.scanAndCorrelate = async (req, res) => {
   }
 };
 
-// Scan only endpoint - performs nmap scan and returns services without correlation
 
-exports.scanOnly = async (req, res) => {
-    const outputFile = path.join(__dirname, "..", "tmp", `nmap_scan_${Date.now()}.xml`);
-    try {
-        const target = req.query.target || process.env.NMAP_TARGET || "127.0.0.1";
-        if (!isValidTarget(target)) {
-            return res.status(400).json({ message: "Invalid target provided." });
-        }
-        fs.mkdirSync(path.dirname(outputFile), { recursive: true });
-        const nmapCmd = `nmap -sV -oX ${outputFile} ${target}`;
-        await execAsync(nmapCmd, { timeout: 120000 });
-        const xml = fs.readFileSync(outputFile, "utf8");
-        const services = await parseNmapXmlToServices(xml);
-        res.status(200).json({
-            scannedTarget: target,
-            services,
-            scanTimestamp: new Date().toISOString(),
-        });
-    } catch (error) {
-        res.status(500).json({ message: "Scan failed", error: error.message || error.toString() });
-    } finally {
-        if (fs.existsSync(outputFile)) {
-            fs.unlinkSync(outputFile);
-        }
-    }
-};
 
 // Correlate only endpoint - accepts services in request body and returns correlated vulnerabilities
 exports.correlateServices = async (req, res) => {

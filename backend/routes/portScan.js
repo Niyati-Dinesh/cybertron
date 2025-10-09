@@ -9,7 +9,7 @@ const router = express.Router();
 router.get('/scan', protect, portScanController.scanAndCorrelate);
 
 // Optional: run scan only (no correlation)
-router.get('/scan-only', protect, portScanController.scanOnly);
+//router.get('/scan-only', protect, portScanController.scanOnly);
 
 // Optional: correlate given services (frontend can send services array)
 router.post('/correlate', protect, portScanController.correlateServices);

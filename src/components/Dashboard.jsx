@@ -280,13 +280,7 @@ const Dashboard = () => {
                       <Monitor className="w-5 h-5 text-cyan-400" />
                       <span>{systemInfo.arch} architecture</span>
                     </div>
-                    <div className="flex items-center justify-center lg:justify-start space-x-2">
-                      <HardDrive className="w-5 h-5 text-purple-400" />
-                      <span>
-                        {systemStats?.memoryUsage}% memory used (
-                        {formatMemory(systemInfo.totalMemory)} total)
-                      </span>
-                    </div>
+                    
                   </>
                 )}
                 <div className="flex items-center justify-center lg:justify-start space-x-2">
@@ -381,7 +375,7 @@ const Dashboard = () => {
 
             {[
               { icon: Wifi, title: "Device Discovery", desc: "Network device mapping and identification" },
-              { icon: AlertTriangle, title: "Threat Analysis", desc: "Advanced security assessment and reporting" },
+              { icon: AlertTriangle, title: "File System Hygiene", desc: "Hygiene report on file directories" },
             ].map((module, index) => (
               <div key={index} className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-sm text-center opacity-60">
                 <div className="p-3 rounded-xl bg-gray-500/10 border border-gray-500/20 inline-flex mb-4">

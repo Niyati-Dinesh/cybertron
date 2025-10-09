@@ -53,7 +53,7 @@ const ProcessTable = ({ disableAutoRefresh = false }) => {
     fetchProcesses();
 
     if (!disableAutoRefresh) {
-      // Background refresh every 5 seconds WITHOUT loading spinner
+      // Background refresh every 5 seconds
       const interval = setInterval(() => {
         backgroundFetchProcesses(); // Silent refresh
       }, 5000);
@@ -358,32 +358,8 @@ const killProcess = async (pid) => {
       {/* Additional System Stats Row (if statistics available) */}
       {statistics && (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <div className="bg-black/20 border border-gray-700/20 rounded-xl p-4 backdrop-blur-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-400 text-xs uppercase tracking-wide">
-                  Total CPU
-                </p>
-                <p className="text-xl font-bold text-white">
-                  {statistics.totalCpuUsage}%
-                </p>
-              </div>
-              <Cpu className="w-5 h-5 text-orange-400" />
-            </div>
-          </div>
-          <div className="bg-black/20 border border-gray-700/20 rounded-xl p-4 backdrop-blur-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-400 text-xs uppercase tracking-wide">
-                  Total Memory
-                </p>
-                <p className="text-xl font-bold text-white">
-                  {statistics.totalMemoryUsage}%
-                </p>
-              </div>
-              <HardDrive className="w-5 h-5 text-purple-400" />
-            </div>
-          </div>
+          
+          
           <div className="bg-black/20 border border-gray-700/20 rounded-xl p-4 backdrop-blur-sm">
             <div className="flex items-center justify-between">
               <div>

@@ -459,26 +459,7 @@ export default function PortScannerPanel({ shouldAutoStart = false, refreshTrigg
         )}
       </div>
 
-      {/* Debug information - only show in development */}
-      {process.env.NODE_ENV === "development" && (
-        <div className="mt-6 p-4 bg-black/30 rounded-lg border border-white/10">
-          <h4 className="font-semibold mb-2 text-gray-300">
-            Debug Information:
-          </h4>
-          <div className="text-sm text-gray-400 grid grid-cols-2 gap-2">
-            <p>Services count: {localServices.length}</p>
-            <p>Vulnerabilities count: {localVulnerabilities.length}</p>
-            <p>Loading: {loading ? "Yes" : "No"}</p>
-            <p>Error: {error || "None"}</p>
-            <p>Auto-start: {shouldAutoStart ? "Yes" : "No"}</p>
-            <p>Has auto-scanned: {hasAutoScanned ? "Yes" : "No"}</p>
-            <p>Refresh trigger: {refreshTrigger ? "Yes" : "No"}</p>
-            <p>Auto-scan enabled: {autoScanEnabled ? "Yes" : "No"}</p>
-            <p>Last auto-scan: {lastAutoScan ? lastAutoScan.toLocaleTimeString() : "Never"}</p>
-            <p>Next auto-scan: {nextAutoScan ? formatTimeUntilNextScan() : "Not scheduled"}</p>
-          </div>
-        </div>
-      )}
+     
     </div>
   );
 }

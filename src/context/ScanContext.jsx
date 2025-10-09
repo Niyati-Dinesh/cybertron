@@ -268,7 +268,7 @@ export const ScanProvider = ({ children }) => {
     return baseStats;
   };
 
-  // Get process count by severity (using server data if available)
+  // Get process count by severity 
   const getProcessCountBySeverity = () => {
     if (processCount) {
       return processCount;

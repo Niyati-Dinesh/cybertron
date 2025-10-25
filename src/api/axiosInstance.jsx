@@ -7,7 +7,7 @@ const axiosInstance = axios.create({
     'Content-Type': 'application/json',
   },
   withCredentials: true,
-  timeout: 10000, // 10 second timeout
+  timeout: 1000 * 60 * 3, // 10 second timeout
 });
 
 // Attach token to every request
@@ -15,7 +15,7 @@ axiosInstance.interceptors.request.use(
   (config) => {
     const token = sessionStorage.getItem('token');
     if (token) {
-      config.headers['authtoken'] = `Bearer ${token}`;
+      config.headers['authtoken'] = token;
     }
     return config;
   },
@@ -40,8 +40,8 @@ axiosInstance.interceptors.response.use(
     // Handle specific status codes
     if (error.response.status === 401) {
       toast.error("Session expired. Please log in again.");
-      sessionStorage.removeItem('token');
-      sessionStorage.removeItem('user');
+      // sessionStorage.removeItem('token');
+      // sessionStorage.removeItem('user');
       window.location.href = '/login';
     }
     

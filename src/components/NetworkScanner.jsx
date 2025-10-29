@@ -171,7 +171,12 @@ export default function NetworkScanner() {
                     )}
                   </td>
                   <td className="px-6 py-4 text-sm">
-                    {!device.isTrusted && device.mac ? (
+                    {device.isTrusted ? (
+                      <span className="flex items-center text-green-400">
+                        <CheckCircle2 className="w-4 h-4 mr-1" />
+                        Trusted
+                      </span>
+                    ) : device.mac ? (
                       <button
                         onClick={() => trustDevice(device.mac)}
                         className="inline-flex items-center space-x-1 px-3 py-1 bg-green-500/10 border border-green-500/30 text-green-400 rounded-lg text-xs hover:bg-green-500/20 transition-all duration-200"
@@ -180,7 +185,13 @@ export default function NetworkScanner() {
                         <span>Trust</span>
                       </button>
                     ) : (
-                      <span className="text-gray-500 text-sm">—</span>
+                      <button
+                        disabled
+                        className="inline-flex items-center space-x-1 px-3 py-1 bg-gray-500/10 border border-gray-500/30 text-gray-400 rounded-lg text-xs cursor-not-allowed"
+                      >
+                        <X className="w-3 h-3" />
+                        <span>No MAC</span>
+                      </button>
                     )}
                   </td>
                 </tr>

@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext } from "react";
-import axios from "axios";
+import axios from "../api/axiosInstance";
 
 export const PortScanContext = createContext();
 
@@ -30,17 +30,11 @@ export const PortScanProvider = ({ children }) => {
         return;
       }
 
-      const url = `http://localhost:5000/api/routes/ports/scan${
-        target ? `?target=${encodeURIComponent(target)}` : ""
-      }`;
+      const url = `ports/scan${target ? `?target=${encodeURIComponent(target)}` : ""}`;
+
       console.log("🌐 Calling URL:", url);
 
-      const resp = await axios.get(url, {
-        headers: {
-          authtoken: token,
-        },
-        timeout: 180000,
-      });
+     const resp = await axios.get(url, { timeout: 180000 });
 
       console.log("✅ Response received:", resp.data);
 
@@ -87,17 +81,12 @@ export const PortScanProvider = ({ children }) => {
         return;
       }
 
-      const resp = await axios.post(
-        "http://localhost:5000/api/routes/ports/correlate",
-        { services: servicesToCheck },
-        {
-          headers: {
-            authtoken: token,
-            "Content-Type": "application/json",
-          },
-          timeout: 60000,
-        }
-      );
+const resp = await axios.post(
+  "ports/correlate",
+  { services: servicesToCheck },
+  { timeout: 60000 }
+);
+
 
       setVulnerabilities(resp.data.vulnerabilities || []);
     } catch (err) {

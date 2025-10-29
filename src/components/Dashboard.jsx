@@ -373,22 +373,26 @@ const Dashboard = () => {
               </div>
             </div>
 
-            {[
-              { icon: Wifi, title: "Device Discovery", desc: "Network device mapping and identification" },
-              { icon: AlertTriangle, title: "File System Hygiene", desc: "Hygiene report on file directories" },
-            ].map((module, index) => (
-              <div key={index} className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-sm text-center opacity-60">
-                <div className="p-3 rounded-xl bg-gray-500/10 border border-gray-500/20 inline-flex mb-4">
-                  <module.icon className="w-8 h-8 text-gray-400" />
-                </div>
-                <h3 className="text-white font-semibold text-lg mb-2">{module.title}</h3>
-                <p className="text-gray-400 text-sm mb-4 leading-relaxed">{module.desc}</p>
-                <div className="flex items-center justify-center space-x-2">
-                  <Clock className="w-4 h-4 text-gray-400" />
-                  <span className="text-gray-400 text-sm">Coming Soon</span>
-                </div>
-              </div>
-            ))}
+    {[
+        { icon: Wifi, title: "Device Discovery", desc: "Network device mapping and identification" },
+        { icon: AlertTriangle, title: "File System Hygiene", desc: "Hygiene report on file directories" },
+      ].map((module, index) => (
+        <div
+          key={index}
+          className="bg-white/5 border border-white/10 rounded-xl p-6 backdrop-blur-sm text-center hover:bg-white/8 transition-all duration-300"
+        >
+          <div className="p-3 rounded-xl bg-cyan-400/10 border border-cyan-400/20 inline-flex mb-4">
+            <module.icon className="w-8 h-8 text-cyan-400" />
+          </div>
+          <h3 className="text-white font-semibold text-lg mb-2">{module.title}</h3>
+          <p className="text-gray-400 text-sm mb-4 leading-relaxed">{module.desc}</p>
+          <div className="flex items-center justify-center space-x-2">
+            <CheckCircle className="w-4 h-4 text-green-400" />
+            <span className="text-green-400 text-sm font-medium">Active</span>
+          </div>
+        </div>
+    ))}
+
           </div>
         </div>
 

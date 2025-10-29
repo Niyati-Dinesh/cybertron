@@ -1,5 +1,5 @@
 import React, { createContext, useState } from "react";
-import axios from "axios";
+import axios from "../api/axiosInstance";
 
 export const ScanContext = createContext();
 
@@ -70,14 +70,7 @@ export const ScanProvider = ({ children }) => {
     }
 
     try {
-      const response = await axios.get(
-        "http://localhost:5000/api/routes/scan/processes",
-        {
-          headers: {
-            authtoken: token,
-          },
-        }
-      );
+    const response = await axios.get("scan/processes");
 
       // Handle the enhanced response structure
       const {
